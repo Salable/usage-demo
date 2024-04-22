@@ -1,6 +1,7 @@
 'use client'
 import React, {useEffect, useState} from "react";
 import useSWR, {SWRConfig} from "swr";
+import LoadingSpinner from "@/components/loading-spinner";
 
 export default function Home() {
   return (
@@ -42,6 +43,16 @@ const Main = () => {
     setPolling(true)
   }
 
+  const removeSeats = async () => {
+    setDisableButton(true)
+    const removeSeats = await fetch('/api/subscriptions/seats', {
+      method: 'put'
+    })
+    const data = await removeSeats.json()
+    if (data) setSalableEventUuid(data.eventUuid)
+    setPolling(true)
+  }
+
   useEffect(() => {
     if (polling && salableEventUuid) {
       const eventPolling = setInterval(async () => {
@@ -69,10 +80,20 @@ const Main = () => {
 
   return (
     <div className='max-w-[1000px] m-auto'>
-      <div className='mb-4'>
-        <button className={`p-3 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`} onClick={() => addSeats()}
-                disabled={disableButton}>{!disableButton ? "Add a seat" : "Adding seat..."}
+      <div className='mb-4 flex'>
+        <button className={`p-3 mr-2 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                onClick={() => addSeats()}
+                disabled={disableButton}>
+          Add a seat
         </button>
+        {licensesCount && (
+          <button
+            className={`p-3 mr-2 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+            onClick={() => licensesCount.unassigned > 0 ? removeSeats() : alert('At least one seat must be unassgined to remove a seat')}
+            disabled={disableButton}>
+            Remove a seat
+          </button>
+        )}
       </div>
       <div className='grid grid-cols-2 gap-6'>
         <div>
@@ -105,8 +126,15 @@ const Main = () => {
           ) : <p>Loading...</p>}
         </div>
         <div>
-          <h2 className='text-2xl font-bold text-gray-900 mb-6'>Requests</h2>
-            <div className='grid grid-cols-3 rounded-md shadow bg-white'>
+          <div className="flex mb-6 items-center">
+            <h2 className='text-2xl font-bold text-gray-900'>Requests</h2>
+            {disableButton && (
+              <div className="ml-3 w-[20px]">
+                <LoadingSpinner />
+              </div>
+            )}
+          </div>
+          <div className='grid grid-cols-3 rounded-md shadow bg-white'>
               <div className='p-3 font-bold border-b-2'>UUID</div>
               <div className='p-3 font-bold border-b-2'>Type</div>
               <div className='p-3 font-bold border-b-2'>Status</div>
@@ -131,9 +159,9 @@ type SalableRequest = {
 }
 
 type GetLicensesCountResponse = {
-  assigned: string;
-  unassigned: string;
-  count: string;
+  assigned: number;
+  unassigned: number;
+  count: number;
 }
 
 type GetAllLicensesResponse = {
