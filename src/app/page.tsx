@@ -120,6 +120,9 @@ const Main = () => {
     if (!getLicensesCount?.isLoading && getLicensesCount?.data?.count && !polling) {
       setUpdatedLicenseCount(getLicensesCount?.data.count)
     }
+  }, [getLicensesCount?.isLoading]);
+
+  useEffect(() => {
     if (polling && salableEventUuid) {
       const eventPolling = setInterval(async () => {
         const event = await fetchSalableEvent(salableEventUuid)
@@ -147,7 +150,7 @@ const Main = () => {
         }
       }, 500);
     }
-  }, [polling, salableEventUuid, getLicensesCount?.isLoading]);
+  }, [salableEventUuid, getLicensesCount?.isLoading]);
 
   return (
     <>
