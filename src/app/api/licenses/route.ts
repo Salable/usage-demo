@@ -20,7 +20,31 @@ export async function GET(req: NextRequest) {
     console.log(error)
     return NextResponse.json(
       { error: error.message },
-      { status: 200 }
+      { status: 400 }
+    );
+  }
+}
+
+export async function PUT(req: NextRequest) {
+  try {
+    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses`, {
+      method: 'PUT',
+      headers: {
+        'x-api-key': env.SALABLE_API_KEY
+      },
+      cache: "no-store",
+      body: JSON.stringify(await req.json())
+    })
+    const data = await res.json()
+    return NextResponse.json(
+      { status: 204 }
+    );
+  } catch (e) {
+    const error = e as Error
+    console.log(error)
+    return NextResponse.json(
+      { error: error.message },
+      { status: 400 }
     );
   }
 }

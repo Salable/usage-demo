@@ -8,18 +8,18 @@ export async function POST(req: NextRequest) {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
       },
-      body: JSON.stringify({increment: 1})
+      body: JSON.stringify(await req.json())
     })
     const data = await res.json()
     return NextResponse.json(
-      data, { status: 200 }
+      data, { status: res.status }
     );
   } catch (e) {
     const error = e as Error
     console.log(error)
     return NextResponse.json(
       { error: error.message },
-      { status: 200 }
+      { status: 400 }
     );
   }
 }
@@ -31,18 +31,18 @@ export async function PUT(req: NextRequest) {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
       },
-      body: JSON.stringify({decrement: 1})
+      body: JSON.stringify(await req.json())
     })
     const data = await res.json()
     return NextResponse.json(
-      data, { status: 200 }
+      data, { status: res.status }
     );
   } catch (e) {
     const error = e as Error
     console.log(error)
     return NextResponse.json(
       { error: error.message },
-      { status: 200 }
+      { status: 400 }
     );
   }
 }
