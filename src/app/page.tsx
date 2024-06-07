@@ -43,7 +43,7 @@ export default function Home() {
         <main className="min-h-screen p-24 bg-gray-100">
           <div className="w-full font-sans text-sm">
             <ToastContainer />
-            <Main/>
+            <Main />
           </div>
         </main>
       </SalableProvider>
