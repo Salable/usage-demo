@@ -7,13 +7,13 @@ export async function GET(req: NextRequest) {
     const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses?subscriptionUuid=${env.SUBSCRIPTION_UUID}&status=active&take=100`, {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
-        version: 'beta',
+        version: 'v2',
       },
       cache: "no-store"
     })
     const data = await res.json()
     return NextResponse.json(
-      data, { status: 200 }
+      data, { status: res.status }
     );
   } catch (e) {
     const error = e as Error
@@ -30,14 +30,15 @@ export async function PUT(req: NextRequest) {
     const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses`, {
       method: 'PUT',
       headers: {
-        'x-api-key': env.SALABLE_API_KEY
+        'x-api-key': env.SALABLE_API_KEY,
+        version: 'v2',
       },
       cache: "no-store",
       body: JSON.stringify(await req.json())
     })
     const data = await res.json()
     return NextResponse.json(
-      { status: 204 }
+      { status: res.status }
     );
   } catch (e) {
     const error = e as Error
