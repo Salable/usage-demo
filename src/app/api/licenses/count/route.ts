@@ -12,14 +12,14 @@ export async function GET(req: NextRequest) {
     })
     const data = await res.json()
     return NextResponse.json(
-      data, { status: 200 }
+      data, { status: res.status }
     );
   } catch (e) {
     const error = e as Error
     console.log(error)
     return NextResponse.json(
       { error: error.message },
-      { status: 200 }
+      { status: 400 }
     );
   }
 }

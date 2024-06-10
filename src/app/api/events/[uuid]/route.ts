@@ -9,7 +9,7 @@ export async function GET(req: NextRequest, { params }: { params: { uuid: string
     })
     const data = await res.json()
     return NextResponse.json(
-      data, { status: 200 }
+      data, { status: res.status }
     );
   } catch (e) {
     const error = e as Error

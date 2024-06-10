@@ -1,13 +1,12 @@
-import type { Metadata } from "next";
+
+'use client'
 import { Inter } from "next/font/google";
 import "./globals.css";
+import {SWRConfig} from "swr";
+import {SalableProvider} from "@/components/context";
+import React from "react";
 
 const inter = Inter({ subsets: ["latin"] });
-
-export const metadata: Metadata = {
-  title: "Salable Seats",
-  description: "App to demo the per seat commercial model in Salable",
-};
 
 export default function RootLayout({
   children,
@@ -15,8 +14,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className={inter.className}>{children}</body>
-    </html>
+    <SWRConfig value={{fetcher: (url) => fetch(url).then(res => res.json())}}>
+      <SalableProvider>
+        <html lang="en">
+          <body className={inter.className}>{children}</body>
+        </html>
+      </SalableProvider>
+    </SWRConfig>
   );
 }
