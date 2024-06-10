@@ -5,6 +5,7 @@ import Link from "next/link";
 import {LockIcon} from "@/components/lock-icon";
 import {TickIcon} from "@/components/tick-icon";
 import Head from "next/head";
+import Image from "next/image";
 
 const activeUser = {
     id: 'userId-1-xxxx',
@@ -35,8 +36,9 @@ const Main = () => {
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
-        <div className="mb-4 text-right">
-          <Link href="/dashboard" className='text-blue-700'>Dashboard</Link>
+        <div className="mb-4 flex justify-end items-center">
+          <Link href="/dashboard" className='text-blue-700 mr-2 '>Dashboard</Link>
+          <div><Image className='rounded-full' src={activeUser.avatar}  alt={activeUser.name} width={30} height={30} /></div>
         </div>
         <div className='mb-6 flex items-center'>
           <h2 className='text-2xl font-bold text-gray-900 mr-4'>
