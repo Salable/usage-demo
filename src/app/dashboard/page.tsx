@@ -9,6 +9,7 @@ import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import {subscription} from "swr/subscription";
 import Link from "next/link";
+import Head from "next/head";
 
 const users: User[] = [
   {
@@ -39,12 +40,15 @@ const users: User[] = [
 
 export default function Dashboard() {
   return (
-    <main className="min-h-screen p-24 bg-gray-100">
-      <div className="w-full font-sans text-sm">
-        <ToastContainer/>
-        <Main/>
-      </div>
-    </main>
+    <>
+      <Head><title>Salable Seats Demo</title></Head>
+      <main className="min-h-screen p-24 bg-gray-100">
+        <div className="w-full font-sans text-sm">
+          <ToastContainer/>
+          <Main/>
+        </div>
+      </main>
+    </>
   );
 }
 

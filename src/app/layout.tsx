@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SWRConfig value={{fetcher: (url) => fetch(url).then(res => res.json())}}>
+    <SWRConfig value={{fetcher: (url) => fetch(url).then(res => res.json()).catch(() => void 0)}}>
       <SalableProvider>
         <html lang="en">
           <body className={inter.className}>{children}</body>
