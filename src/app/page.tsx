@@ -8,6 +8,7 @@ import Head from "next/head";
 import Image from "next/image";
 import {User} from "@/app/dashboard/page";
 import {DownIcon} from "@/components/down-icon";
+import LoadingSpinner from "@/components/loading-spinner";
 
 const users: User[] = [
   {
@@ -57,6 +58,7 @@ const Main = () => {
   const {checkLicense} = useSalableContext()
   if (!checkLicense) return null
   const checkLicensesResponse = checkLicense([activeUser.id])
+
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
@@ -99,20 +101,24 @@ const Main = () => {
         </div>
         <div className='flex flex-col'>
           <div
-            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${checkLicensesResponse?.data?.capabilitiesEndDates?.photos ? "bg-green-800" : "bg-gray-500"}`}>
-            <span>Photos capability</span> {!checkLicensesResponse?.data?.capabilitiesEndDates?.photos ? (<LockIcon />) : (<TickIcon />)}
+            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${!checkLicensesResponse?.data?.capabilitiesEndDates?.photos || checkLicensesResponse?.isValidating ? "bg-gray-500" : "bg-green-800"}`}>
+            <span>Photos capability</span>
+            {checkLicensesResponse?.isValidating ? <div className='w-[24px]'><LoadingSpinner fill="white" /></div> : (!checkLicensesResponse?.data?.capabilitiesEndDates?.photos ? (<LockIcon/>) : (<TickIcon/>))}
           </div>
           <div
-            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${checkLicensesResponse?.data?.capabilitiesEndDates?.videos ? "bg-green-800" : "bg-gray-500"}`}>
-            <span>Videos capability</span> {!checkLicensesResponse?.data?.capabilitiesEndDates?.videos ? (<LockIcon />) : (<TickIcon />)}
+            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${!checkLicensesResponse?.data?.capabilitiesEndDates?.photos || checkLicensesResponse?.isValidating ? "bg-gray-500" : "bg-green-800"}`}>
+            <span>Videos capability</span>
+            {checkLicensesResponse?.isValidating ? <div className='w-[24px]'><LoadingSpinner fill="white" /></div> : (!checkLicensesResponse?.data?.capabilitiesEndDates?.videos ? (<LockIcon/>) : (<TickIcon/>))}
           </div>
           <div
-            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${checkLicensesResponse?.data?.capabilitiesEndDates?.export ? "bg-green-800" : "bg-gray-500"}`}>
-            <span>Export capability</span> {!checkLicensesResponse?.data?.capabilitiesEndDates?.export ? (<LockIcon />) : (<TickIcon />)}
+            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${!checkLicensesResponse?.data?.capabilitiesEndDates?.photos || checkLicensesResponse?.isValidating ? "bg-gray-500" : "bg-green-800"}`}>
+            <span>Export capability</span>
+            {checkLicensesResponse?.isValidating ? <div className='w-[24px]'><LoadingSpinner fill="white" /></div> : (!checkLicensesResponse?.data?.capabilitiesEndDates?.export ? (<LockIcon/>) : (<TickIcon/>))}
           </div>
           <div
-            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${checkLicensesResponse?.data?.capabilitiesEndDates?.crop ? "bg-green-800" : "bg-gray-500"}`}>
-            <span>Crop capability</span> {!checkLicensesResponse?.data?.capabilitiesEndDates?.crop ? (<LockIcon />) : (<TickIcon />)}
+            className={`flex justify-between items-center p-4 text-white mb-2 rounded-md ${!checkLicensesResponse?.data?.capabilitiesEndDates?.photos || checkLicensesResponse?.isValidating ? "bg-gray-500" : "bg-green-800"}`}>
+            <span>Crop capability</span>
+            {checkLicensesResponse?.isValidating ? <div className='w-[24px]'><LoadingSpinner fill="white" /></div> : (!checkLicensesResponse?.data?.capabilitiesEndDates?.crop ? (<LockIcon/>) : (<TickIcon/>))}
           </div>
         </div>
       </div>
