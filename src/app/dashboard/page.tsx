@@ -1,5 +1,5 @@
 'use client'
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import useSWR, {SWRConfig} from "swr";
 import LoadingSpinner from "@/components/loading-spinner";
 import {useRouter, useParams, useSearchParams} from 'next/navigation';
@@ -10,6 +10,7 @@ import "react-toastify/dist/ReactToastify.css";
 import {subscription} from "swr/subscription";
 import Link from "next/link";
 import Head from "next/head";
+import {useOnClickOutside} from "usehooks-ts";
 
 const users: User[] = [
   {
@@ -291,13 +292,19 @@ const Main = () => {
 
 const AssignSeat = ({licenseUuid, assignedUser}: { licenseUuid: string; assignedUser: User | null }) => {
   const [showUsers, setShowUsers] = useState<boolean>(false)
+  const ref = useRef(null)
+  const clickOutside = () => {
+    setShowUsers(false)
+  }
+  useOnClickOutside(ref, clickOutside)
+
   const {getAllLicenses, getLicensesCount} = useSalableContext()
   const granteeIds = new Set(getAllLicenses?.data?.data.map((l) => l.granteeId))
   return (
     <div>
       <div className='p-2 flex justify-between'>
         <div>
-          <div className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
+          <div ref={ref} className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
             <div className='rounded-full mr-3'>
               <Image src={assignedUser ? assignedUser.avatar : '/avatars/default-avatar.png'} alt='avatar' width={40}
                      height={40} className='rounded-full'/>

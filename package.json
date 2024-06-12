@@ -15,7 +15,8 @@
     "react-dom": "^18",
     "react-hook-form": "^7.51.3",
     "react-toastify": "^10.0.5",
-    "swr": "^2.2.5"
+    "swr": "^2.2.5",
+    "usehooks-ts": "^3.1.0"
   },
   "devDependencies": {
     "@flydotio/dockerfile": "^0.5.5",

@@ -1,5 +1,5 @@
 'use client'
-import React, {useState} from "react";
+import React, {useRef, useState} from "react";
 import {useSalableContext} from "@/components/context";
 import Link from "next/link";
 import {LockIcon} from "@/components/lock-icon";
@@ -9,6 +9,7 @@ import Image from "next/image";
 import {User} from "@/app/dashboard/page";
 import {DownIcon} from "@/components/down-icon";
 import LoadingSpinner from "@/components/loading-spinner";
+import {useOnClickOutside} from "usehooks-ts";
 
 const users: User[] = [
   {
@@ -55,9 +56,16 @@ export default function Home() {
 const Main = () => {
   const [activeUser, setActiveUser] = useState<User>(users[0])
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState<boolean>(false)
+  const ref = useRef(null)
+
   const {checkLicense} = useSalableContext()
   if (!checkLicense) return null
   const checkLicensesResponse = checkLicense([activeUser.id])
+
+  const clickOutside = () => {
+    setIsUserDropdownOpen(false)
+  }
+  useOnClickOutside(ref, clickOutside)
 
   return (
     <>
@@ -65,7 +73,7 @@ const Main = () => {
         <div className="mb-4 flex justify-between items-center">
           <Link href="/dashboard" className='text-blue-700 mr-2 '>Dashboard</Link>
           <div className={`relative hover:bg-white p-2 rounded-md ${isUserDropdownOpen && "bg-white rounded-br-none"}`}>
-            <div onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)} className='cursor-pointer'>
+            <div ref={ref} onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)} className='cursor-pointer'>
               <div className='leading-none mb-1'>Acting as</div>
               <div className='flex items-center'>
                 <div className='flex items-center mr-2'>
