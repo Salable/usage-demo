@@ -303,8 +303,8 @@ const AssignSeat = ({licenseUuid, assignedUser}: { licenseUuid: string; assigned
   return (
     <div>
       <div className='p-2 flex justify-between'>
-        <div>
-          <div ref={ref} className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
+        <div ref={ref}>
+          <div className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
             <div className='rounded-full mr-3'>
               <Image src={assignedUser ? assignedUser.avatar : '/avatars/default-avatar.png'} alt='avatar' width={40}
                      height={40} className='rounded-full'/>
