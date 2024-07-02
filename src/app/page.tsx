@@ -71,7 +71,10 @@ const Main = () => {
     <>
       <div className='max-w-[1000px] m-auto'>
         <div className="mb-4 flex justify-between items-center">
-          <Link href="/dashboard" className='text-blue-700 mr-2 '>Dashboard</Link>
+          <div className='flex items-center'>
+            <Link href="/dashboard" className='text-blue-700 mr-2 hover:underline'>Dashboard</Link>
+            <Link href="/usage" className='text-blue-700 mr-2 hover:underline'>Usage</Link>
+          </div>
           <div ref={ref} className={`relative hover:bg-white p-2 rounded-md ${isUserDropdownOpen && "bg-white rounded-br-none"}`}>
             <div onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)} className='cursor-pointer'>
               <div className='leading-none mb-1'>Acting as</div>
