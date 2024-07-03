@@ -1,8 +1,9 @@
-import React, {createContext, ReactNode, useCallback, useContext, useState} from 'react';
+import React, {createContext, ReactNode, useCallback, useContext, useEffect, useState} from 'react';
 import useSWR, { SWRResponse } from "swr";
+import {useRouter} from "next/navigation";
 
-// Create a context
 type LicenseCheckFunction = (granteeIds: string[]) => SWRResponse<LicenseCheckResponse> | null
+type GetUserFunction = (id: string) => SWRResponse<User> | null
 type LicenseCheckResponse = {
   capabilities: string[],
   publicHash: string,
@@ -17,15 +18,28 @@ const SalableContext = createContext({
   getLicensesCount: null,
   getSubscription: null,
   checkLicense: null,
+  // getUser: null,
+  user: null,
+  setUser: null
 } as {
   getAllLicenses: SWRResponse<GetAllLicensesResponse> | null,
   getLicensesCount: SWRResponse<GetLicensesCountResponse> | null
   getSubscription: SWRResponse<any> | null
-  checkLicense: LicenseCheckFunction | null
+  checkLicense: LicenseCheckFunction | null,
+  // getUser: GetUserFunction | null,
+  user: User | null,
+  setUser: React.Dispatch<React.SetStateAction<User | null>> | null
 });
 
-// Create a provider component
+export type User = {
+  id: string;
+  firstName: string;
+  lastName: string;
+}
+
 const SalableProvider = ({ children }: {children: ReactNode}) => {
+  const [user, setUser] = useState<User | null>(null)
+  const router = useRouter()
   const getAllLicenses = useSWR<GetAllLicensesResponse>('/api/licenses')
   const getLicensesCount = useSWR<GetLicensesCountResponse>('/api/licenses/count')
   const getSubscription = useSWR<any>('/api/subscriptions')
@@ -37,8 +51,29 @@ const SalableProvider = ({ children }: {children: ReactNode}) => {
     getAllLicenses,
     getLicensesCount,
     getSubscription,
-    checkLicense
+    checkLicense,
+    user,
+    setUser
   }
+
+
+  useEffect(() => {
+    const storedUser = window.localStorage.getItem('salable_user_id')
+    if (storedUser && user) {
+      window.localStorage.setItem('salable_user_id', user.id)
+    }
+    if (storedUser && !user) {
+      const getUserFetch = async () => {
+        const userRes = await fetch(`/api/users/${storedUser}`)
+        const user = await userRes.json()
+        setUser(user)
+      }
+      getUserFetch()
+    }
+    if (!storedUser && !user) {
+      router.push('/sign-in')
+    }
+  }, [user]);
 
   return (
     <SalableContext.Provider value={values}>

@@ -18,6 +18,14 @@ export async function GET(req: NextRequest) {
       headers: { 'x-api-key': env.SALABLE_API_KEY },
       cache: "no-store"
     })
+    const headers = new Headers(res.headers)
+    const headersMap = new Map(headers)
+    if (headersMap.get('content-type') === 'text/plain') {
+      return NextResponse.json(
+        { status: res.status }
+      );
+    }
+    console.log(headersMap)
     const data = await res.json()
     return NextResponse.json(
       data, { status: res.status }

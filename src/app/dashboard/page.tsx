@@ -12,32 +12,6 @@ import Link from "next/link";
 import Head from "next/head";
 import {useOnClickOutside} from "usehooks-ts";
 
-const users: User[] = [
-  {
-    id: 'userId-1-xxxx',
-    name: 'Perry George',
-    avatar: '/avatars/perry-avatar.png',
-    email: 'pgeorge@adaptavist.com'
-  },
-  {
-    id: 'userId-2-xxxx',
-    name: 'Daniel Sturman',
-    avatar: '/avatars/DS-4.webp',
-    email: 'dsturman@adaptavist.com'
-  },
-  {
-    id: 'userId-3-xxxx',
-    name: 'Sean Cooper',
-    avatar: '/avatars/sc.png',
-    email: 'scooper@adaptavist.com'
-  },
-  {
-    id: 'userId-4-xxxx',
-    name: 'Anil Patel',
-    avatar: '/avatars/ap.png',
-    email: 'apatel@adaptavist.com'
-  }
-]
 
 export default function Dashboard() {
   return (
@@ -54,7 +28,6 @@ export default function Dashboard() {
 }
 
 const Main = () => {
-  const router = useRouter();
   const [polling, setPolling] = useState(false)
   const [salableEventUuid, setSalableEventUuid] = useState<string | null>(null)
   const [requests, setRequests] = useState<{ [uuid: string]: SalableRequest }>({})
@@ -303,8 +276,8 @@ const AssignSeat = ({licenseUuid, assignedUser}: { licenseUuid: string; assigned
   return (
     <div>
       <div className='p-2 flex justify-between'>
-        <div>
-          <div ref={ref} className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
+        <div ref={ref}>
+          <div className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
             <div className='rounded-full mr-3'>
               <Image src={assignedUser ? assignedUser.avatar : '/avatars/default-avatar.png'} alt='avatar' width={40}
                      height={40} className='rounded-full'/>
@@ -406,11 +379,4 @@ type SelectedLicenseUuids = {
   [uuid: string]: {
     granteeId: string | null
   }
-}
-
-export type User = {
-  id: string;
-  name: string;
-  avatar: string;
-  email: string;
 }
