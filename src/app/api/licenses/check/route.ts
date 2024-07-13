@@ -1,20 +1,14 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 import {unlink} from "node:fs";
+import {cookies} from "next/headers";
+import {turso} from "../../../../../turso";
+import {getIronSession} from "iron-session";
 
 export async function GET(req: NextRequest) {
-  const searchParams = new URL(req.url).searchParams
-  const params =new URLSearchParams(searchParams);
-  if (!params.get('granteeIds')) {
-    return NextResponse.json(
-      { error: 'granteeIds param not found' },
-      { status: 400 }
-    );
-  }
-  const granteeIds = params.get('granteeIds')
-
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses/check?granteeIds=${granteeIds}&productUuid=${env.PRODUCT_UUID}`, {
+    const session = await getIronSession<{email: string; id: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/check?granteeIds=${session.id}&productUuid=${env.PRODUCT_UUID}`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY },
       cache: "no-store"
     })
@@ -25,7 +19,6 @@ export async function GET(req: NextRequest) {
         { status: res.status }
       );
     }
-    console.log(headersMap)
     const data = await res.json()
     return NextResponse.json(
       data, { status: res.status }

@@ -2,9 +2,10 @@
 import React from "react";
 import Head from "next/head";
 import {Resolver, useForm} from "react-hook-form";
-import {useRouter} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
+import LoadingSpinner from "@/components/loading-spinner";
 
-export default function SignUp() {
+export default function AcceptInvite() {
   return (
     <>
       <Head>
@@ -20,7 +21,6 @@ export default function SignUp() {
 }
 
 type FormValues = {
-  organisationName: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -33,12 +33,6 @@ const resolver: Resolver<FormValues> = async (values) => {
       type: string;
       message: string;
     }> = {}
-    if (!values.organisationName) {
-      obj.organisationName = {
-        type: 'required',
-        message: 'Organisation name is required.',
-      }
-    }
     if (!values.firstName) {
       obj.firstName = {
         type: 'required',
@@ -73,12 +67,15 @@ const resolver: Resolver<FormValues> = async (values) => {
 
 const Main = () => {
   const router = useRouter()
-  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({ resolver });
+  const searchParams = useSearchParams()
+  const token = searchParams.get('token')
+  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
   const onSubmit = handleSubmit(async (data) => {
+    console.log("=== submit")
     try {
-      const userResponse = await fetch('/api/sign-up', {
+      const userResponse = await fetch('/api/accept-invite', {
         method: 'post',
-        body: JSON.stringify(data)
+        body: JSON.stringify({...data, token})
       })
       if (userResponse.ok) {
         router.push('/')
@@ -93,11 +90,6 @@ const Main = () => {
         <h1 className='text-3xl mb-4'>Sign up</h1>
         <form onSubmit={onSubmit} className='grid gap-3'>
           <fieldset>
-            <input className='p-3 w-full' {...register("organisationName")} placeholder="Organisation name"/>
-            {errors.organisationName && <p className='text-red-600'>{errors.organisationName.message}</p>}
-          </fieldset>
-
-          <fieldset>
             <input className='p-3 w-full' {...register("firstName")} placeholder="First name"/>
             {errors.firstName && <p className='text-red-600'>{errors.firstName.message}</p>}
           </fieldset>
@@ -108,7 +100,18 @@ const Main = () => {
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("email")} placeholder="Email"/>
+            <input
+              className='p-3 w-full'
+              placeholder="Email"
+              {...register("email", {
+                required: "required",
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Entered value does not match email format"
+                }
+              })}
+              type="email"
+            />
             {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
           </fieldset>
 
@@ -118,7 +121,11 @@ const Main = () => {
           </fieldset>
 
           <div>
-            <button className={`p-4 text-white rounded-md leading-none bg-blue-700`}>Sign up</button>
+            <button
+              className={`p-4 text-white rounded-md leading-none bg-blue-700`}
+            >
+              {!isSubmitting ? "Sign up" : <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}
+            </button>
           </div>
         </form>
       </div>

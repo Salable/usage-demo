@@ -3,14 +3,13 @@ import {env} from "@/app/environment";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 
-export async function GET(req: NextRequest) {
+export async function GET(req: NextRequest, params: {params: {uuid: string}}) {
   try {
-    const session = await getIronSession<{email: string; id: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-    console.log(session)
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions?email=${session.email}&status=active`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.params.uuid}?expand=[plan.currencies]`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY, version: 'v2' },
     })
     const data = await res.json()
+    console.log(data)
     return NextResponse.json(
       data, { status: res.status }
     );

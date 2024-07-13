@@ -1,12 +1,13 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 
-export async function POST(req: NextRequest) {
+export async function POST(req: NextRequest, params: {params:{uuid: string}}) {
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/subscriptions/${env.SUBSCRIPTION_UUID}/seats`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.params.uuid}/seats`, {
       method: 'post',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
+        version: 'v2'
       },
       body: JSON.stringify(await req.json())
     })
@@ -24,12 +25,13 @@ export async function POST(req: NextRequest) {
   }
 }
 
-export async function PUT(req: NextRequest) {
+export async function PUT(req: NextRequest,  params: {params:{uuid: string}}) {
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/subscriptions/${env.SUBSCRIPTION_UUID}/seats`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.params.uuid}/seats`, {
       method: 'put',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
+        version: 'v2'
       },
       body: JSON.stringify(await req.json())
     })

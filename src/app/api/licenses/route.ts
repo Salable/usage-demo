@@ -3,8 +3,11 @@ import {env} from "@/app/environment";
 
 
 export async function GET(req: NextRequest) {
+  const subscriptionUuid = req.nextUrl.searchParams.get('subscriptionUuid')
+  let url = `${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses?status=active`
+  if (subscriptionUuid) url += `&subscriptionUuid=${subscriptionUuid}`;
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses?subscriptionUuid=${env.SUBSCRIPTION_UUID}&status=active&take=100`, {
+    const res = await fetch(url, {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
         version: 'v2',
@@ -27,7 +30,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses`, {
       method: 'PUT',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
