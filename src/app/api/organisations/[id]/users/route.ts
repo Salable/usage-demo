@@ -5,7 +5,7 @@ import {DBUser, DBUserOrganisation} from "@/app/api/sign-in/route";
 export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
   try {
     const usersOrganisations = await turso.execute(`
-      SELECT * FROM UserOrganisation WHERE OrganisationId = '${Number(params.id)}';
+      SELECT * FROM UserOrganisation WHERE OrganisationID = '${params.id}';
     `)
     const usersInOrg = usersOrganisations.rows as unknown as DBUserOrganisation[]
     if (usersInOrg.length === 0) throw new Error("No users found")
@@ -29,6 +29,6 @@ export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
       {status: 200}
     )
   } catch (e) {
-    return NextResponse.json({status: 400, message: "Error retrieving session"})
+    return NextResponse.json({status: 400, message: "Error retrieving users"})
   }
 }

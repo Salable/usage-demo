@@ -4,7 +4,7 @@ import {turso} from "../../../../../turso";
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const users = await turso.execute(`
-      SELECT * FROM users WHERE ID = '${params.id}';
+      SELECT * FROM User WHERE ID = '${params.id}';
     `)
     if (!users.rows[0]) {
       throw new Error("User not found")

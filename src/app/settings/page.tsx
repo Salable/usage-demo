@@ -1,5 +1,5 @@
 'use client'
-import React from "react";
+import React, {useEffect} from "react";
 import LoadingSpinner from "@/components/loading-spinner";
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
@@ -22,6 +22,14 @@ export type SalableSubscription = {
   lineItemIds: string[],
   planUuid: string;
   isTest: boolean;
+  plan: {
+    uuid: string;
+    displayName: string;
+    interval: string;
+    currencies: {
+      price: number
+    }[]
+  }
 }
 
 export type GetAllSubscriptionsResponse = {
@@ -34,7 +42,7 @@ export default function Dashboard() {
   return (
     <>
       <Head><title>Salable Seats Demo</title></Head>
-      <main className="min-h-screen p-24 bg-gray-100">
+      <main>
         <div className="w-full font-sans text-sm">
           <ToastContainer/>
           <Main/>
@@ -46,12 +54,10 @@ export default function Dashboard() {
 
 const Main = () => {
   const {data, isLoading} = useSWR<GetAllSubscriptionsResponse>('/api/subscriptions')
+
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
-        <div className="mb-4 text-right">
-          <Link href="/" className='text-blue-700'>View capabilities</Link>
-        </div>
         <h1 className='text-3xl mb-4'>Subscriptions</h1>
         <div>
           {!isLoading ? (
@@ -60,8 +66,11 @@ const Main = () => {
                 return (
                   <div className='mb-1 p-2 bg-white rounded-sm shadow' key={sub.uuid}>
                     <div className='flex justify-between'>
-                      <h2 className='mr-2'>{sub.uuid}</h2>
+                      <h2 className='mr-2'>{sub.uuid} {sub.plan?.displayName}</h2>
                       <Link href={`/settings/subscriptions/${sub.uuid}`} className='text-blue-500'>View</Link>
+                    </div>
+                    <div>
+                      {sub.quantity} Seats
                     </div>
                   </div>
                 );

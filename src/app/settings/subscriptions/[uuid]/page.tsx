@@ -7,6 +7,7 @@ import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
 import {SalableSubscription} from "@/app/settings/page";
+import {AssignUser} from "@/components/assign-user";
 
 export type User = {
   id: string;
@@ -24,7 +25,7 @@ export type GetAllLicensesResponse = {
   last: string;
   data: License[]
 }
-type License = {
+export type License = {
   uuid: string;
   startTime: string;
   granteeId: string;
@@ -39,7 +40,7 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
   return (
     <>
       <Head><title>Salable Seats Demo</title></Head>
-      <main className="min-h-screen p-24 bg-gray-100">
+      <main>
         <div className="w-full font-sans text-sm">
           <Main uuid={params.uuid} />
         </div>
@@ -54,14 +55,12 @@ const Main = ({uuid}: {uuid: string}) => {
   const [requests, setRequests] = useState<{ [uuid: string]: SalableRequest }>({})
   const [disableButton, setDisableButton] = useState(false)
   const [updatedLicenseCount, setUpdatedLicenseCount] = useState<number | null>(null)
-  const [showUsers, setShowUsers] = useState<boolean>(false)
 
   const {data: licenseCount, mutate: licenseCountMutate, isLoading: licenseCountLoading} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${uuid}&status=active`)
   const {data: session} = useSWR<Session>(`/api/session`)
   const {data: users} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
   const {data: subscription} = useSWR<SalableSubscription>(`/api/subscriptions/${uuid}`)
   const {data: licenses, mutate: licensesMutate} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${uuid}&status=active`)
-  const granteeIds = new Set(licenses?.data.map((l) => l.granteeId))
 
   const licenseTotalHasChanged = updatedLicenseCount && licenseCount?.count !== updatedLicenseCount
 
@@ -183,78 +182,9 @@ const Main = ({uuid}: {uuid: string}) => {
                       return aDate - bDate
                     }).map((l, i) => {
                       const assignedUser = users?.find((u) => u.id.toString() === l.granteeId) ?? null
-                      // const ref = useRef(null)
-                      // const clickOutside = () => {
-                      //   setShowUsers(false)
-                      // }
-                      // useOnClickOutside(ref, clickOutside)
                       return (
                         <React.Fragment key={`licenses_${i}`}>
-                          <div className='border-b-2'>
-                            <div>
-                              <div className='p-2 flex justify-between'>
-                                <div>
-                                  <div className='flex items-center p-2 cursor-pointer'
-                                       onClick={() => setShowUsers(!showUsers)}>
-                                    <div className='rounded-full mr-3'>
-                                      {/*<Image src={assignedUser ? assignedUser.avatar : '/avatars/default-avatar.png'} alt='avatar' width={40}*/}
-                                      {/*       height={40} className='rounded-full'/>*/}
-                                    </div>
-                                    <div>
-                                      <div>{assignedUser ? `${assignedUser.firstName} ${assignedUser.lastName}` : "Assign user"}</div>
-                                      {assignedUser &&
-                                        <div className='text-xs text-gray-500'>{assignedUser.email}</div>}
-                                    </div>
-                                  </div>
-                                  {showUsers && (
-                                    <div className='absolute border-2 bg-white'>
-                                      {users.filter((u) => !granteeIds.has(u.id)).map((user, i) => (
-                                        <div className='flex items-center p-2 cursor-pointer hover:bg-gray-200'
-                                             key={`${i}_assign_users`}
-                                             onClick={async () => {
-                                               await fetch('/api/licenses', {
-                                                 method: 'PUT',
-                                                 body: JSON.stringify([{
-                                                   uuid: l.uuid,
-                                                   granteeId: user.id
-                                                 }])
-                                               })
-                                               await licensesMutate()
-                                               await licenseCountMutate()
-                                               setShowUsers(false)
-                                             }}>
-                                          {/*<div className='rounded-full mr-2'>*/}
-                                          {/*  <Image src={user.avatar} alt='avatar' width={24} height={24} className='rounded-full'/>*/}
-                                          {/*</div>*/}
-                                          <div>{user.firstName} {user.lastName}</div>
-                                        </div>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-                                <div className='flex items-center'>
-                                  {assignedUser ? (
-                                    <button className='p-2 border-2 rounded-md text-gray-500 text-xs'
-                                      onClick={async () => {
-                                        try {
-                                          await fetch('/api/licenses', {
-                                            method: 'PUT',
-                                            body: JSON.stringify([{
-                                              uuid: l.uuid,
-                                              granteeId: null
-                                            }])
-                                          })
-                                          await licensesMutate()
-                                          await licenseCountMutate()
-                                        } catch (e) {
-                                          console.log(e)
-                                        }
-                                      }}> Unassign user</button>
-                                  ) : null}
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                          <AssignUser assignedUser={assignedUser} license={l} subscriptionUuid={uuid} key={`assign_users_${i}`} />
                         </React.Fragment>
                       );
                     })}
@@ -295,33 +225,34 @@ const Main = ({uuid}: {uuid: string}) => {
                         </>
                       )}
                     </div>
-                    <div className='border-b-2 flex justify-between items-end py-4'>
-                      <div>
-                        <div className='text-gray-500'>Current Plan</div>
-                        <div className='text-xl'>{subscription?.plan?.displayName}</div>
-                      </div>
-                      <div>
-                        <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
-                          <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
-                        </div>
-                      </div>
-                    </div>
-                    {subscription && updatedLicenseCount && licenseCount && (
+                    {subscription && updatedLicenseCount && licenseCount ? (
                       <>
-                        <div className={`items-center ${licenseTotalHasChanged ? "border-b-2 py-4" : "pt-4"} text-right`}>
-                          <Price price={subscription?.plan?.currencies?.[0].price} count={licenseCount.count}
-                                 interval={subscription?.plan?.interval} label="Current total"/>
-                        </div>
-                        {licenseTotalHasChanged && (
-                          <div className='items-center py-4 text-right'>
-                            <Price price={subscription?.plan?.currencies?.[0].price} count={updatedLicenseCount}
-                                   interval={subscription?.plan.interval} label="New total"/>
+                        <div className='border-b-2 flex justify-between items-end py-4'>
+                          <div>
+                            <div className='text-gray-500'>Current Plan</div>
+                            <div className='text-xl'>{subscription?.plan?.displayName}</div>
                           </div>
-                        )}
+                          <div>
+                            <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
+                              <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
+                            </div>
+                          </div>
+                        </div>
+                        <div
+                          className={`items-center ${licenseTotalHasChanged ? "border-b-2 py-4" : "pt-4"} text-right`}>
+                          <Price price={subscription.plan?.currencies[0].price} count={licenseCount.count}
+                                 interval={subscription.plan?.interval} label="Current total"/>
+                        </div>
+                        {licenseTotalHasChanged ? (
+                          <div className='items-center py-4 text-right'>
+                            <Price price={subscription.plan.currencies?.[0].price} count={updatedLicenseCount}
+                                   interval={subscription.plan.interval} label="New total"/>
+                          </div>
+                        ) : null}
                       </>
-                    )}
+                    ) : null}
 
-                    {licenseTotalHasChanged && (
+                    {licenseTotalHasChanged ? (
                       <div className='flex justify-end'>
                         <button
                           className={`w-full p-4 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
@@ -339,7 +270,7 @@ const Main = ({uuid}: {uuid: string}) => {
                           Update subscription
                         </button>
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 </div>
               </div>

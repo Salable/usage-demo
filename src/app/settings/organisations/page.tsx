@@ -7,12 +7,13 @@ import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
 import {Session, User} from "@/app/settings/subscriptions/[uuid]/page";
+import {DBOrganisation} from "@/app/api/organisations/[id]/route";
 
 export default function Dashboard() {
   return (
     <>
       <Head><title>Salable Seats Demo</title></Head>
-      <main className="min-h-screen p-24 bg-gray-100">
+      <main>
         <div className="w-full font-sans text-sm">
           <ToastContainer/>
           <Main/>
@@ -27,16 +28,13 @@ const Main = () => {
   const [isFetchingInviteLink, setIsFetchingInviteLink] = useState(false);
   const {data: session} = useSWR<Session>(`/api/session`)
   const {data: users, isLoading} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
-  console.log(inviteLink)
+  const {data: organisation, isLoading: organisationIsLoading} = useSWR<DBOrganisation>(`/api/organisations/${session?.organisationId}`)
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
-        <div className="mb-4 text-right">
-          <Link href="/" className='text-blue-700'>View capabilities</Link>
-        </div>
-        <h1 className='text-3xl mb-4'>Organisation</h1>
+        {!organisationIsLoading && organisation ? <h1 className='text-3xl mb-4'>{organisation.name}</h1> : null}
         <div className='mb-6'>
-          {!isLoading && users ? (
+          {!isLoading && users?.length ? (
             <div>
               {users.map((user, i) => {
                 return (
@@ -66,7 +64,10 @@ const Main = () => {
                     body: JSON.stringify({organisationId: session.organisationId})
                   })
                   const data = await res.json() as {token: string}
-                  setInviteLink(`http://localhost:3001/accept-invite?token=${data.token}`)
+                  const link = `http://localhost:3000/accept-invite?token=${data.token}`
+                  setInviteLink(link)
+                  await navigator.clipboard.writeText(link);
+                  toast.success("Invite link copied")
                   setIsFetchingInviteLink(false)
                 } catch (e) {
                   setIsFetchingInviteLink(false)
@@ -80,8 +81,10 @@ const Main = () => {
         ) : null}
 
         {inviteLink ? (
-          <p>{inviteLink}</p>
-        ): null}
+          <div className='mt-6 p-2 border-2 truncate text-ellipsis overflow-hidden bg-white'>
+            <p>{inviteLink}</p>
+          </div>
+        ) : null}
       </div>
     </>
   )

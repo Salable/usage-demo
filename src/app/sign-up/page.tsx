@@ -3,6 +3,7 @@ import React from "react";
 import Head from "next/head";
 import {Resolver, useForm} from "react-hook-form";
 import {useRouter} from "next/navigation";
+import Link from "next/link";
 
 export default function SignUp() {
   return (
@@ -10,7 +11,7 @@ export default function SignUp() {
       <Head>
         <title>Salable Seats Demo</title>
       </Head>
-      <main className="min-h-screen p-24 bg-gray-100">
+      <main>
         <div className="w-full font-sans text-sm">
           <Main />
         </div>
@@ -117,9 +118,11 @@ const Main = () => {
             {errors.password && <p className='text-red-600'>{errors.password.message}</p>}
           </fieldset>
 
-          <div>
+          <div className='mb-4'>
             <button className={`p-4 text-white rounded-md leading-none bg-blue-700`}>Sign up</button>
           </div>
+
+          <p>Already got an account? <Link className='text-blue-500' href="/sign-in">Sign in</Link></p>
         </form>
       </div>
     </>

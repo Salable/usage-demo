@@ -3,8 +3,8 @@
 import { Inter } from "next/font/google";
 import "./globals.css";
 import {SWRConfig} from "swr";
-import React from "react";
 import {ToastContainer} from "react-toastify";
+import {Header} from "@/components/header";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -15,10 +15,13 @@ export default function RootLayout({
 }>) {
   return (
     <SWRConfig value={{fetcher: (url) => fetch(url).then(res => res.json()).catch(() => void 0)}}>
-      <html lang="en">
-        <body className={inter.className}>
-          <ToastContainer/>
-          {children}
+      <html lang="en" className='bg-gray-100'>
+        <body className={`${inter.className}`}>
+          <Header />
+          <div className='py-10'>
+            <ToastContainer />
+            {children}
+          </div>
         </body>
       </html>
     </SWRConfig>

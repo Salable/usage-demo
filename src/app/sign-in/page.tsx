@@ -20,7 +20,7 @@ export default function SignIn() {
       <Head>
         <title>Salable Seats Demo</title>
       </Head>
-      <main className="min-h-screen p-24 bg-gray-100">
+      <main>
         <div className="w-full font-sans text-sm">
           <Main />
         </div>
