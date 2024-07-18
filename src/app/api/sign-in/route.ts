@@ -1,60 +1,45 @@
 import {NextRequest, NextResponse} from "next/server";
-import {turso} from "../../../../turso";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
-import {hashString} from "@/utils/hash-string";
 import {validateHash} from "@/utils/validate-hash";
+import {db} from "@/drizzle/drizzle";
+import {usersOrganisationsTable, usersTable} from "@/drizzle/schema";
+import {eq} from "drizzle-orm";
 
 type SignInRequestBody = {
-  email: string
+  username: string
   password: string
 }
 
 export type DBUser = {
   ID: number;
-  firstName: string;
-  lastName: string;
+  username: number
   email: string;
   salt: string;
   hash: string
 }
 
-export type DBOrganisation = {
-  ID: number;
-  name: string;
-}
-
-export type DBUserOrganisation = {
-  UserID: number;
-  OrganisationID: string;
-}
-
 export async function POST(req: NextRequest) {
   try {
     const body: SignInRequestBody = await req.json()
-    const users = await turso.execute(`
-      SELECT * FROM User WHERE email = '${body.email}';
-    `)
-    if (users.rows.length === 0) throw new Error("User not found")
 
-    const user = users.rows[0] as unknown as DBUser
+    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
+    if (existingUsersResult.length === 0) throw new Error("User not found")
+    const user = existingUsersResult[0]
+
     const validLogin = validateHash(body.password, user.salt, user.hash)
-
     if (!validLogin) throw new Error("Incorrect password")
 
-    const usersOrganisations = await turso.execute(`
-      SELECT * FROM UserOrganisation WHERE UserId = '${user.ID}';
-    `)
-    const userOrg = usersOrganisations.rows[0] as unknown as DBUserOrganisation
+    const existingUsersOrganisationsResult = await db.select().from(usersOrganisationsTable).where(eq(usersOrganisationsTable.userId, user.id));
+    const userOrg = existingUsersOrganisationsResult[0]
 
-    const session = await getIronSession<{id: string; email: string; organisationId: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-    session.id = user.ID.toString();
-    session.organisationId = userOrg.OrganisationID.toString();
-    session.email = user.email
+    const session = await getIronSession<{id: string; email: string; organisationId: string; username: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    session.id = user.id.toString();
+    session.organisationId = userOrg.organisationId.toString();
     await session.save();
 
 
-    return NextResponse.json({id: user.ID, firstName: user.firstName, lastName: user.lastName},
+    return NextResponse.json({id: user.id, username: user.username, email: user.email},
       { status: 200 }
     );
   } catch (e) {

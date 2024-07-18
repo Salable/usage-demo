@@ -1,18 +1,19 @@
 'use client'
 import React, {useEffect, useState} from "react";
 import LoadingSpinner from "@/components/loading-spinner";
-import { toast } from 'react-toastify';
+import {toast, ToastContainer} from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
 import {SalableSubscription} from "@/app/settings/page";
 import {AssignUser} from "@/components/assign-user";
+import {useSearchParams} from "next/navigation";
+import {Modal} from "@/components/modal";
 
 export type User = {
   id: string;
-  firstName: string;
-  lastName: string;
+  username: string;
   email: string;
 }
 export type GetLicensesCountResponse = {
@@ -42,6 +43,7 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
       <Head><title>Salable Seats Demo</title></Head>
       <main>
         <div className="w-full font-sans text-sm">
+          <ToastContainer />
           <Main uuid={params.uuid} />
         </div>
       </main>
@@ -50,6 +52,8 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
 }
 
 const Main = ({uuid}: {uuid: string}) => {
+  const searchParams = useSearchParams()
+  const isModalOpen = searchParams.get("modalOpen")
   const [polling, setPolling] = useState(false)
   const [salableEventUuid, setSalableEventUuid] = useState<string | null>(null)
   const [requests, setRequests] = useState<{ [uuid: string]: SalableRequest }>({})
@@ -152,6 +156,7 @@ const Main = ({uuid}: {uuid: string}) => {
     }
   }, [salableEventUuid, licenseCountLoading]);
 
+  const pendingInvites = users?.filter((u) => !u.username && u.email)
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
@@ -163,9 +168,7 @@ const Main = ({uuid}: {uuid: string}) => {
             <div>
               <div className='flex justify-between items-center'>
                 <div className='mb-6 flex items-center'>
-                  <h2 className='text-2xl font-bold text-gray-900 mr-4'>
-                    Users
-                  </h2>
+                  <h2 className='text-2xl font-bold text-gray-900 mr-4'>Seats</h2>
                   {disableButton ? (
                     <div className='w-[20px]'><LoadingSpinner/></div>
                   ) : null}
@@ -194,10 +197,44 @@ const Main = ({uuid}: {uuid: string}) => {
                       <span className='mr-4 leading-none text-xs text-gray-500'>{licenseCount?.assigned} out of {licenseCount?.count} seats assigned</span>
                     </div>
                   </div>
+
+                  {pendingInvites?.length ? (
+                    <div className='mt-6'>
+                      <h2 className='text-2xl font-bold text-gray-900 mr-4 mb-6'>Pending invites</h2>
+
+                      <div className='flex flex-col rounded-md shadow bg-white'>
+                        {users.filter((u) => !u.username && u.email).map((u, i) => {
+                          const licenseUuid = licenses.data.find((l) => l.granteeId === u.id.toString() )?.uuid
+                          return (
+                            <div className='p-3 bg-white border-b-2 flex justify-between items-center'>
+                              {u.email}
+                              <button
+                                className='p-2 border-2 rounded-md text-gray-500 text-xs'
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/tokens?email=${u.email}`)
+                                    const data = await res.json()
+                                    if (res.ok) {
+                                      const link = `http://localhost:3000/accept-invite?token=${data.value}${licenseUuid ? "&licenseUuid="+licenseUuid : ""}`
+                                      await navigator.clipboard.writeText(link);
+                                    }
+                                  } catch (e) {
+                                    console.log(e)
+                                  }
+                                }}
+                              >
+                                Copy invite link
+                              </button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
 
                 <div>
-                  <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
+                <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
                     <div className='text-xl text-center mb-2'>Update seat count</div>
                     <div className='mb-2 text-center'>To change the seat count you will need to update your subscription
                       which will incur a change to your billing.
@@ -240,13 +277,11 @@ const Main = ({uuid}: {uuid: string}) => {
                         </div>
                         <div
                           className={`items-center ${licenseTotalHasChanged ? "border-b-2 py-4" : "pt-4"} text-right`}>
-                          <Price price={subscription.plan?.currencies[0].price} count={licenseCount.count}
-                                 interval={subscription.plan?.interval} label="Current total"/>
+                          <Price price={subscription.plan?.currencies[0].price} count={licenseCount.count} interval={subscription.plan?.interval} label="Current total"/>
                         </div>
                         {licenseTotalHasChanged ? (
                           <div className='items-center py-4 text-right'>
-                            <Price price={subscription.plan.currencies?.[0].price} count={updatedLicenseCount}
-                                   interval={subscription.plan.interval} label="New total"/>
+                            <Price price={subscription.plan.currencies?.[0].price} count={updatedLicenseCount} interval={subscription.plan.interval} label="New total"/>
                           </div>
                         ) : null}
                       </>
@@ -282,6 +317,9 @@ const Main = ({uuid}: {uuid: string}) => {
           )}
         </div>
       </div>
+      {isModalOpen ? (
+        <Modal />
+      ) : null}
     </>
   )
 }

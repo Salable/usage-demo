@@ -30,7 +30,7 @@ export default function SignIn() {
 }
 
 type FormValues = {
-  email: string;
+  username: string;
   password: string;
 };
 
@@ -40,10 +40,10 @@ const resolver: Resolver<FormValues> = async (values) => {
       type: string;
       message: string;
     }> = {}
-    if (!values.email) {
+    if (!values.username) {
       obj.email = {
         type: 'required',
-        message: 'Email is required.',
+        message: 'Username is required.',
       }
     }
     if (!values.password) {
@@ -79,8 +79,8 @@ const Main = () => {
       <h1 className='text-3xl mb-4'>Sign In</h1>
       <form onSubmit={onSubmit} className='grid gap-3'>
         <fieldset>
-          <input className='p-3 w-full' {...register("email")} placeholder="Email"/>
-          {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
+          <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+          {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
         </fieldset>
 
         <fieldset>

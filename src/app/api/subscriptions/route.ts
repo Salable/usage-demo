@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   try {
     const session = await getIronSession<{email: string; id: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
     console.log(session)
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions?email=${session.email}&status=active`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions?email=${session.email}&status=active&expand=plan`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY, version: 'v2' },
     })
     const data = await res.json()

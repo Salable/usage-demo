@@ -22,8 +22,7 @@ export default function SignUp() {
 
 type FormValues = {
   organisationName: string;
-  firstName: string;
-  lastName: string;
+  username: string;
   email: string;
   password: string;
 };
@@ -40,16 +39,10 @@ const resolver: Resolver<FormValues> = async (values) => {
         message: 'Organisation name is required.',
       }
     }
-    if (!values.firstName) {
-      obj.firstName = {
+    if (!values.username) {
+      obj.username = {
         type: 'required',
-        message: 'First name is required.',
-      }
-    }
-    if (!values.lastName) {
-      obj.lastName = {
-        type: 'required',
-        message: 'Last name is required.',
+        message: 'Username is required.',
       }
     }
     if (!values.email) {
@@ -99,13 +92,8 @@ const Main = () => {
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("firstName")} placeholder="First name"/>
-            {errors.firstName && <p className='text-red-600'>{errors.firstName.message}</p>}
-          </fieldset>
-
-          <fieldset>
-            <input className='p-3 w-full' {...register("lastName")} placeholder="Last name"/>
-            {errors.lastName && <p className='text-red-600'>{errors.lastName.message}</p>}
+            <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+            {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
           </fieldset>
 
           <fieldset>

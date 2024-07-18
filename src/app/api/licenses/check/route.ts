@@ -1,8 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
-import {unlink} from "node:fs";
 import {cookies} from "next/headers";
-import {turso} from "../../../../../turso";
 import {getIronSession} from "iron-session";
 
 export async function GET(req: NextRequest) {

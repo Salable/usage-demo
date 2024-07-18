@@ -1,0 +1,243 @@
+{
+  "version": "6",
+  "dialect": "sqlite",
+  "id": "e0095fad-ae68-4660-b8b8-6967ccc35c47",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "tables": {
+    "Organisations": {
+      "name": "Organisations",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Organisations_name_unique": {
+          "name": "Organisations_name_unique",
+          "columns": [
+            "name"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Tokens": {
+      "name": "Tokens",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "value": {
+          "name": "value",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organisationId": {
+          "name": "organisationId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Tokens_value_unique": {
+          "name": "Tokens_value_unique",
+          "columns": [
+            "value"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {
+        "Tokens_organisationId_Organisations_id_fk": {
+          "name": "Tokens_organisationId_Organisations_id_fk",
+          "tableFrom": "Tokens",
+          "tableTo": "Organisations",
+          "columnsFrom": [
+            "organisationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "Tokens_userId_Users_id_fk": {
+          "name": "Tokens_userId_Users_id_fk",
+          "tableFrom": "Tokens",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "UsersOrganisations": {
+      "name": "UsersOrganisations",
+      "columns": {
+        "userId": {
+          "name": "userId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "organisationId": {
+          "name": "organisationId",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "UsersOrganisations_userId_Users_id_fk": {
+          "name": "UsersOrganisations_userId_Users_id_fk",
+          "tableFrom": "UsersOrganisations",
+          "tableTo": "Users",
+          "columnsFrom": [
+            "userId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "UsersOrganisations_organisationId_Organisations_id_fk": {
+          "name": "UsersOrganisations_organisationId_Organisations_id_fk",
+          "tableFrom": "UsersOrganisations",
+          "tableTo": "Organisations",
+          "columnsFrom": [
+            "organisationId"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "Users": {
+      "name": "Users",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "integer",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "username": {
+          "name": "username",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "email": {
+          "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "salt": {
+          "name": "salt",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "hash": {
+          "name": "hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "Users_username_unique": {
+          "name": "Users_username_unique",
+          "columns": [
+            "username"
+          ],
+          "isUnique": true
+        },
+        "Users_email_unique": {
+          "name": "Users_email_unique",
+          "columns": [
+            "email"
+          ],
+          "isUnique": true
+        },
+        "Users_salt_unique": {
+          "name": "Users_salt_unique",
+          "columns": [
+            "salt"
+          ],
+          "isUnique": true
+        },
+        "Users_hash_unique": {
+          "name": "Users_hash_unique",
+          "columns": [
+            "hash"
+          ],
+          "isUnique": true
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    }
+  },
+  "enums": {},
+  "_meta": {
+    "schemas": {},
+    "tables": {},
+    "columns": {}
+  },
+  "internal": {
+    "indexes": {}
+  }
+}

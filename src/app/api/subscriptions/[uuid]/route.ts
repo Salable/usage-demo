@@ -9,7 +9,6 @@ export async function GET(req: NextRequest, params: {params: {uuid: string}}) {
       headers: { 'x-api-key': env.SALABLE_API_KEY, version: 'v2' },
     })
     const data = await res.json()
-    console.log(data)
     return NextResponse.json(
       data, { status: res.status }
     );

@@ -6,9 +6,7 @@ import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 export async function GET() {
   try {
     const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-    console.log('session', session)
     if (!session) throw new Error("Session not found");
-    console.log(session)
     return NextResponse.json(
       session,
       {status: 200}

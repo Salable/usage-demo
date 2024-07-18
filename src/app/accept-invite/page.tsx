@@ -4,6 +4,7 @@ import Head from "next/head";
 import {Resolver, useForm} from "react-hook-form";
 import {useRouter, useSearchParams} from "next/navigation";
 import LoadingSpinner from "@/components/loading-spinner";
+import {toast, ToastContainer} from "react-toastify";
 
 export default function AcceptInvite() {
   return (
@@ -13,6 +14,7 @@ export default function AcceptInvite() {
       </Head>
       <main>
         <div className="w-full font-sans text-sm">
+          <ToastContainer />
           <Main />
         </div>
       </main>
@@ -21,8 +23,7 @@ export default function AcceptInvite() {
 }
 
 type FormValues = {
-  firstName: string;
-  lastName: string;
+  username: string;
   email: string;
   password: string;
 };
@@ -33,22 +34,10 @@ const resolver: Resolver<FormValues> = async (values) => {
       type: string;
       message: string;
     }> = {}
-    if (!values.firstName) {
+    if (!values.username) {
       obj.firstName = {
         type: 'required',
-        message: 'First name is required.',
-      }
-    }
-    if (!values.lastName) {
-      obj.lastName = {
-        type: 'required',
-        message: 'Last name is required.',
-      }
-    }
-    if (!values.email) {
-      obj.email = {
-        type: 'required',
-        message: 'Email is required.',
+        message: 'Username is required.',
       }
     }
     if (!values.password) {
@@ -69,16 +58,19 @@ const Main = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
+  const licenseUuid = searchParams.get('licenseUuid')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
   const onSubmit = handleSubmit(async (data) => {
-    console.log("=== submit")
     try {
       const userResponse = await fetch('/api/accept-invite', {
         method: 'post',
-        body: JSON.stringify({...data, token})
+        body: JSON.stringify({...data, token, licenseUuid})
       })
       if (userResponse.ok) {
         router.push('/')
+      } else {
+        // const data = await userResponse.json()
+        // if (data.error) toast.error(data.error)
       }
     } catch (e) {
       console.log(e)
@@ -90,29 +82,8 @@ const Main = () => {
         <h1 className='text-3xl mb-4'>Sign up</h1>
         <form onSubmit={onSubmit} className='grid gap-3'>
           <fieldset>
-            <input className='p-3 w-full' {...register("firstName")} placeholder="First name"/>
-            {errors.firstName && <p className='text-red-600'>{errors.firstName.message}</p>}
-          </fieldset>
-
-          <fieldset>
-            <input className='p-3 w-full' {...register("lastName")} placeholder="Last name"/>
-            {errors.lastName && <p className='text-red-600'>{errors.lastName.message}</p>}
-          </fieldset>
-
-          <fieldset>
-            <input
-              className='p-3 w-full'
-              placeholder="Email"
-              {...register("email", {
-                required: "required",
-                pattern: {
-                  value: /\S+@\S+\.\S+/,
-                  message: "Entered value does not match email format"
-                }
-              })}
-              type="email"
-            />
-            {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
+            <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+            {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
           </fieldset>
 
           <fieldset>

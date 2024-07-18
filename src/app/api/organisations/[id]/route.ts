@@ -1,5 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
-import {turso} from "../../../../../turso";
+import {db} from "@/drizzle/drizzle";
+import {organisationsTable} from "@/drizzle/schema";
+import {eq} from "drizzle-orm";
 
 export type DBOrganisation = {
   ID: number;
@@ -8,13 +10,10 @@ export type DBOrganisation = {
 
 export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
   try {
-    const organisationsDBResult = await turso.execute(`
-      SELECT * FROM Organisation WHERE ID = '${params.id}';
-    `)
-    const organisations = organisationsDBResult.rows as unknown as DBOrganisation[]
-    if (organisations.length === 0) throw new Error("No organisation found")
-
-    const organisation = organisations[0]
+    if (!params.id) NextResponse.json({status: 404})
+    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.id, Number(params.id)))
+    if (existingOrganisationsResult.length === 0) throw new Error("No organisation found")
+    const organisation = existingOrganisationsResult[0]
 
     return NextResponse.json(
       organisation,

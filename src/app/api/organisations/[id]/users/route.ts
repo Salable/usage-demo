@@ -1,31 +1,23 @@
 import {NextRequest, NextResponse} from "next/server";
-import {turso} from "../../../../../../turso";
-import {DBUser, DBUserOrganisation} from "@/app/api/sign-in/route";
+import {db} from "@/drizzle/drizzle";
+import {usersOrganisationsTable, usersTable} from "@/drizzle/schema";
+import {eq} from "drizzle-orm";
 
-export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
+export async function GET(req: NextRequest, {params}: {params: {id: string | undefined}}) {
   try {
-    const usersOrganisations = await turso.execute(`
-      SELECT * FROM UserOrganisation WHERE OrganisationID = '${params.id}';
-    `)
-    const usersInOrg = usersOrganisations.rows as unknown as DBUserOrganisation[]
-    if (usersInOrg.length === 0) throw new Error("No users found")
-
-    console.log('usersInOrg', usersOrganisations)
-
-    const usersDBResult = await turso.execute(`
-      SELECT * FROM User WHERE ID IN (${usersInOrg.map((u) => u.UserID).join(',')});
-    `)
-
-    const users = usersDBResult.rows as unknown as DBUser[]
+    if (!params.id) NextResponse.json({status: 404})
+    // TODO filter out null users in query
+    const users = await db.select()
+      .from(usersOrganisationsTable)
+      .rightJoin(usersTable, eq(usersOrganisationsTable.userId, usersTable.id))
+      .where(eq(usersOrganisationsTable.organisationId, Number(params.id)))
     if (users.length === 0) throw new Error("No users found")
 
     return NextResponse.json(
-      users.map((u) => ({
-        id: u.ID,
-        email: u.email,
-        firstName: u.firstName,
-        lastName: u.lastName,
-      })),
+      users.map((u) => {
+        const {id, email, username} = u.Users
+        return ({id, email, username});
+      }),
       {status: 200}
     )
   } catch (e) {

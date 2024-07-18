@@ -1,5 +1,5 @@
 'use client'
-import React, {useEffect} from "react";
+import React from "react";
 import LoadingSpinner from "@/components/loading-spinner";
 import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
@@ -65,12 +65,9 @@ const Main = () => {
               {data?.data?.map((sub, i) => {
                 return (
                   <div className='mb-1 p-2 bg-white rounded-sm shadow' key={sub.uuid}>
-                    <div className='flex justify-between'>
-                      <h2 className='mr-2'>{sub.uuid} {sub.plan?.displayName}</h2>
+                    <div className='flex justify-between items-center'>
+                      <h2 className='mr-2 text-xl'>{sub.plan?.displayName} <span className='text-gray-500 italic'>({sub.quantity} Seats)</span></h2>
                       <Link href={`/settings/subscriptions/${sub.uuid}`} className='text-blue-500'>View</Link>
-                    </div>
-                    <div>
-                      {sub.quantity} Seats
                     </div>
                   </div>
                 );

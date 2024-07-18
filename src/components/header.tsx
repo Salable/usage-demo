@@ -2,7 +2,6 @@
 import React, {useRef, useState} from "react";
 import useSWR from "swr";
 import {Session, User} from "@/app/settings/subscriptions/[uuid]/page";
-import {LicenseCheckResponse} from "@/app/page";
 import Link from "next/link";
 import LoadingSpinner from "@/components/loading-spinner";
 import {useRouter} from "next/navigation";
@@ -15,8 +14,9 @@ export const Header = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef(null);
   const {data: session, mutate: mutateSession} = useSWR<Session>(`/api/session`)
-  const {data: licenseCheck, isValidating: licenseCheckIsValidating} = useSWR<LicenseCheckResponse>(`/api/licenses/check`)
   const {data: user} = useSWR<User>(`/api/users/${session?.id}`)
+
+  console.log(user)
 
   const clickOutside = () => {
     setDropDownOpen(false)
@@ -32,11 +32,10 @@ export const Header = () => {
         </div>
         <div>
           <div className="flex justify-between items-center">
-            {session?.id ? (
+            {session?.id && user?.username ? (
               <div ref={ref} className={`relative hover:bg-white ${dropDownOpen && "bg-white rounded-br-none"}`}>
                 <div onClick={() => setDropDownOpen(!dropDownOpen)} className='w-[38px] h-[38px] cursor-pointer rounded-full bg-blue-200 leading-none flex items-center justify-center'>
-                  <span>{user?.firstName?.[0]}</span>
-                  <span>{user?.lastName?.[0]}</span>
+                  <span>{user?.username?.[0].toUpperCase()}</span>
                 </div>
                 {dropDownOpen && (
                   <div className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow'>

@@ -11,7 +11,6 @@ export async function GET(req: NextRequest, { params }: { params: { uuid: string
       cache: "no-store"
     })
     const data = await res.json()
-    console.log(data)
     return NextResponse.json(
       data, { status: res.status }
     );

@@ -36,11 +36,11 @@ const Main = () => {
         <div className='mb-6'>
           {!isLoading && users?.length ? (
             <div>
-              {users.map((user, i) => {
+              {users.filter((u) => u.username).map((user, i) => {
                 return (
                   <div className='mb-1 p-2 bg-white rounded-sm shadow' key={user.id}>
                     <div className='flex justify-between'>
-                      <p className='mr-2'>{user.firstName} {user.lastName}</p>
+                      <p className='mr-2'>{user.username} <span className='text-gray-500 italic text-sm'>({user.email})</span></p>
                     </div>
                   </div>
                 );
@@ -64,6 +64,11 @@ const Main = () => {
                     body: JSON.stringify({organisationId: session.organisationId})
                   })
                   const data = await res.json() as {token: string}
+                  if (!res.ok) {
+                    toast.error("Error creating invite link")
+                    setIsFetchingInviteLink(false)
+                    return
+                  }
                   const link = `http://localhost:3000/accept-invite?token=${data.token}`
                   setInviteLink(link)
                   await navigator.clipboard.writeText(link);
