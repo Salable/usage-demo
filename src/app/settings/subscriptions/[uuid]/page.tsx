@@ -8,11 +8,11 @@ import Head from "next/head";
 import useSWR from "swr";
 import {SalableSubscription} from "@/app/settings/page";
 import {AssignUser} from "@/components/assign-user";
-import {useSearchParams} from "next/navigation";
+import {useRouter, useSearchParams} from "next/navigation";
 import {Modal} from "@/components/modal";
 
 export type User = {
-  id: string;
+  uuid: string;
   username: string;
   email: string;
 }
@@ -32,8 +32,8 @@ export type License = {
   granteeId: string;
 }
 export type Session = {
-  id: string;
-  organisationId: string;
+  uuid: string;
+  organisationUuid: string;
   email: string;
 }
 
@@ -52,6 +52,7 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
 }
 
 const Main = ({uuid}: {uuid: string}) => {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const isModalOpen = searchParams.get("modalOpen")
   const [polling, setPolling] = useState(false)
@@ -61,8 +62,8 @@ const Main = ({uuid}: {uuid: string}) => {
   const [updatedLicenseCount, setUpdatedLicenseCount] = useState<number | null>(null)
 
   const {data: licenseCount, mutate: licenseCountMutate, isLoading: licenseCountLoading} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${uuid}&status=active`)
-  const {data: session} = useSWR<Session>(`/api/session`)
-  const {data: users} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
+  const {data: session, isLoading, isValidating} = useSWR<Session>(`/api/session`)
+  const {data: users} = useSWR<User[]>(`/api/organisations/${session?.organisationUuid}/users`)
   const {data: subscription} = useSWR<SalableSubscription>(`/api/subscriptions/${uuid}`)
   const {data: licenses, mutate: licensesMutate} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${uuid}&status=active`)
 
@@ -156,7 +157,9 @@ const Main = ({uuid}: {uuid: string}) => {
     }
   }, [salableEventUuid, licenseCountLoading]);
 
-  const pendingInvites = users?.filter((u) => !u.username && u.email)
+  if (!isValidating && !isLoading && !session?.uuid) {
+    router.push("/")
+  }
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
@@ -164,6 +167,9 @@ const Main = ({uuid}: {uuid: string}) => {
           <Link href="/settings" className='text-blue-700'>Back to subscriptions</Link>
         </div>
         <div>
+          <h1 className='text-3xl mb-6 flex items-center'>Subscription
+            {subscription ? <span className='px-2 ml-2 py-2 rounded-md leading-none bg-sky-200 text-sky-500 uppercase text-lg font-bold'>{subscription.plan.displayName}</span> : null}
+          </h1>
           {licenses?.data?.length && licenseCount?.count && users?.length ? (
             <div>
               <div className='flex justify-between items-center'>
@@ -184,7 +190,7 @@ const Main = ({uuid}: {uuid: string}) => {
                       const bDate = new Date(b.startTime).getTime()
                       return aDate - bDate
                     }).map((l, i) => {
-                      const assignedUser = users?.find((u) => u.id.toString() === l.granteeId) ?? null
+                      const assignedUser = users?.find((u) => u.uuid === l.granteeId) ?? null
                       return (
                         <React.Fragment key={`licenses_${i}`}>
                           <AssignUser assignedUser={assignedUser} license={l} subscriptionUuid={uuid} key={`assign_users_${i}`} />
@@ -198,13 +204,13 @@ const Main = ({uuid}: {uuid: string}) => {
                     </div>
                   </div>
 
-                  {pendingInvites?.length ? (
+                  {users?.filter((u) => !u.username && u.email)?.length ? (
                     <div className='mt-6'>
                       <h2 className='text-2xl font-bold text-gray-900 mr-4 mb-6'>Pending invites</h2>
 
                       <div className='flex flex-col rounded-md shadow bg-white'>
                         {users.filter((u) => !u.username && u.email).map((u, i) => {
-                          const licenseUuid = licenses.data.find((l) => l.granteeId === u.id.toString() )?.uuid
+                          const licenseUuid = licenses.data.find((l) => l.granteeId === u.uuid )?.uuid
                           return (
                             <div className='p-3 bg-white border-b-2 flex justify-between items-center'>
                               {u.email}

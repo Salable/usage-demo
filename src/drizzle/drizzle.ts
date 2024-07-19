@@ -5,8 +5,7 @@ import { createClient } from '@libsql/client';
 config({ path: '.env' });
 
 export const client = createClient({
-  url: 'file:local.db',
-  // url: 'libsql://salable-seats-adapta-perry.turso.io',
+  url: process.env.TURSO_DATABASE_URL!,
   authToken: process.env.TURSO_AUTH_TOKEN!,
 });
 

@@ -11,7 +11,7 @@ export type DBOrganisation = {
 export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
   try {
     if (!params.id) NextResponse.json({status: 404})
-    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.id, Number(params.id)))
+    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.uuid, params.id))
     if (existingOrganisationsResult.length === 0) throw new Error("No organisation found")
     const organisation = existingOrganisationsResult[0]
 

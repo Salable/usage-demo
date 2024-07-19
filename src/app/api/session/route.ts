@@ -16,11 +16,10 @@ export async function GET() {
   }
 }
 
-export async function POST(req: NextRequest) {
-  // const session = await getIronSession<{email: string}>(cookies(), { password: "...", cookieName: "..." });
-  // session.email = "Alison";
-  // await session.save();
+export async function DELETE(req: NextRequest) {
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  session.destroy()
   return NextResponse.json(
-    { status: 201 }
+    { status: 204 }
   );
 }

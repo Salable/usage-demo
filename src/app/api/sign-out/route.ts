@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 type SignOutRequestBody = {
   id: string
@@ -8,7 +9,7 @@ type SignOutRequestBody = {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await getIronSession<{email: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
     session.destroy();
     return NextResponse.json(
       { status: 201 }

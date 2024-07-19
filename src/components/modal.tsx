@@ -40,20 +40,22 @@ export const Modal = () => {
   const pathname = usePathname()
   const licenseUuid = searchParams.get("licenseUuid")
   const subscriptionUuid = searchParams.get("subscriptionUuid")
-  const { register, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<ModalFormValues>({ resolver });
-  const [serverError, setServerError] = useState<string | null>(null)
+  const { register, setError, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<ModalFormValues>({ resolver });
   const ref = useRef(null)
-  const clickOutside = () => {
+  const removeQueryParams = () => {
     const params = new URLSearchParams(searchParams.toString())
     params.delete("modalOpen")
     params.delete("licenseUuid")
     params.delete("subscriptionUuid")
     router.push(pathname + '?' + params.toString())
   }
+  const clickOutside = () => {
+    removeQueryParams()
+  }
   useOnClickOutside(ref, clickOutside)
 
   const {data: session} = useSWR<Session>(`/api/session`)
-  const {mutate: mutateUsers} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
+  const {mutate: mutateUsers} = useSWR<User[]>(`/api/organisations/${session?.organisationUuid}/users`)
   const {mutate: mutateLicenses} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${subscriptionUuid}&status=active`)
   const {mutate: mutateLicenseCount} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${subscriptionUuid}&status=active`)
 
@@ -62,26 +64,27 @@ export const Modal = () => {
       const res = await fetch('/api/tokens', {
         method: 'POST',
         body: JSON.stringify({
-          organisationId: session?.organisationId,
+          organisationUuid: session?.organisationUuid,
           email: values.email,
           licenseUuid
         })
       })
       const data = await res.json()
       if (!res.ok) {
-        setServerError(data.error)
+        setError("root.serverError", {
+          type: "400",
+          message: data.error
+        })
         return
       }
       const link = `http://localhost:3000/accept-invite?token=${data.token}`
       await navigator.clipboard.writeText(link);
-      const params = new URLSearchParams(searchParams.toString())
-      params.delete("modalOpen")
-      params.delete("licenseUuid")
-      params.delete("subscriptionUuid")
-      router.push(pathname + '?' + params.toString())
+      removeQueryParams()
       await mutateUsers()
-      await mutateLicenses()
-      await mutateLicenseCount()
+      if (subscriptionUuid) {
+        await mutateLicenses()
+        await mutateLicenseCount()
+      }
     } catch (e) {
       console.log(e)
     }
@@ -97,9 +100,7 @@ export const Modal = () => {
         </div>
         <form onSubmit={onSubmit} className='grid gap-3'>
           <fieldset>
-            <input type="email" className='p-3 w-full border-2' {...register("email")} placeholder="email" onChange={() => {
-              setServerError(null)
-            }}/>
+            <input type="email" className='p-3 w-full border-2' {...register("email")} placeholder="email" />
             {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
           </fieldset>
 
@@ -107,9 +108,9 @@ export const Modal = () => {
             <button className={`p-4 text-white rounded-md leading-none bg-blue-700`}>{!isSubmitting ? "Invite user" :
               <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}</button>
           </div>
-          {serverError && !errors.email ? (
+          {errors.root?.serverError ? (
             <div className='bg-red-500 text-white p-2 rounded-sm'>
-              {serverError}
+              {errors.root?.serverError.message}
             </div>
           ) : null}
         </form>

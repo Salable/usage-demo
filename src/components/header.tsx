@@ -7,6 +7,8 @@ import LoadingSpinner from "@/components/loading-spinner";
 import {useRouter} from "next/navigation";
 import {useOnClickOutside} from "usehooks-ts";
 import {SalableLogo} from "@/components/salable-logo";
+import {LicenseCheckResponse} from "@/app/page";
+import {GetAllSubscriptionsResponse} from "@/app/settings/page";
 
 export const Header = () => {
   const router = useRouter();
@@ -14,9 +16,9 @@ export const Header = () => {
   const [loggingOut, setLoggingOut] = useState(false);
   const ref = useRef(null);
   const {data: session, mutate: mutateSession} = useSWR<Session>(`/api/session`)
-  const {data: user} = useSWR<User>(`/api/users/${session?.id}`)
-
-  console.log(user)
+  const {data: user, mutate: mutateUsers} = useSWR<User>(`/api/users/${session?.uuid}`)
+  const {mutate: mutateLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check`)
+  const {data: subscriptions, isLoading: isLoadingSubscriptions, isValidating: isValidatingSubscriptions, } = useSWR<GetAllSubscriptionsResponse>('/api/subscriptions')
 
   const clickOutside = () => {
     setDropDownOpen(false)
@@ -32,35 +34,41 @@ export const Header = () => {
         </div>
         <div>
           <div className="flex justify-between items-center">
-            {session?.id && user?.username ? (
+            {session?.uuid && user?.username ? (
               <div ref={ref} className={`relative hover:bg-white ${dropDownOpen && "bg-white rounded-br-none"}`}>
                 <div onClick={() => setDropDownOpen(!dropDownOpen)} className='w-[38px] h-[38px] cursor-pointer rounded-full bg-blue-200 leading-none flex items-center justify-center'>
                   <span>{user?.username?.[0].toUpperCase()}</span>
                 </div>
                 {dropDownOpen && (
                   <div className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow'>
-                    <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings'}>Subscriptions</Link>
+                    <div className='p-3 block f-full border-b text-sm text-center'>Hello, {user.username}</div>
+                    {subscriptions?.data.length ?
+                      <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/subscriptions/'+subscriptions?.data?.[0].uuid}>Subscriptions</Link> : null }
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/organisations'}>Organisations</Link>
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/'}>Capabilities</Link>
                     <button className='p-3 block f-full text-right hover:bg-gray-50 text-sm' onClick={async () => {
                       try {
                         setLoggingOut(true)
-                        await fetch('/api/sign-out', {
-                          method: 'POST',
-                          body: JSON.stringify({id: session.id})
+                        await fetch('/api/session', {
+                          method: 'DELETE'
                         })
                         await mutateSession()
+                        await mutateLicenseCheck()
+                        await mutateUsers()
                         setLoggingOut(false)
+                        setDropDownOpen(false)
+                        router.push('/')
                       } catch (e) {
                         console.log(e)
                       }
-                      router.push('/sign-in')
                     }}>{!loggingOut ? "Sign out" :
                       <div className='w-[15px]'><LoadingSpinner fill="#1e4fd8"/></div>}</button>
                   </div>
                 )}
               </div>
-            ) : null}
+            ) : (
+              <Link className='p-3 text-white rounded-md leading-none bg-blue-700 w-full text-center text-sm' href="/sign-in">Sign in</Link>
+            )}
           </div>
         </div>
       </div>

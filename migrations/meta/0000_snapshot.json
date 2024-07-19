@@ -1,15 +1,15 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "e0095fad-ae68-4660-b8b8-6967ccc35c47",
+  "id": "ebedb5aa-172f-416e-8666-daf1c47491fc",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "Organisations": {
       "name": "Organisations",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
+        "uuid": {
+          "name": "uuid",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -23,6 +23,13 @@
         }
       },
       "indexes": {
+        "Organisations_uuid_unique": {
+          "name": "Organisations_uuid_unique",
+          "columns": [
+            "uuid"
+          ],
+          "isUnique": true
+        },
         "Organisations_name_unique": {
           "name": "Organisations_name_unique",
           "columns": [
@@ -38,9 +45,9 @@
     "Tokens": {
       "name": "Tokens",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
+        "uuid": {
+          "name": "uuid",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -52,22 +59,29 @@
           "notNull": true,
           "autoincrement": false
         },
-        "organisationId": {
-          "name": "organisationId",
-          "type": "integer",
+        "organisationUuid": {
+          "name": "organisationUuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "userId": {
-          "name": "userId",
-          "type": "integer",
+        "userUuid": {
+          "name": "userUuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         }
       },
       "indexes": {
+        "Tokens_uuid_unique": {
+          "name": "Tokens_uuid_unique",
+          "columns": [
+            "uuid"
+          ],
+          "isUnique": true
+        },
         "Tokens_value_unique": {
           "name": "Tokens_value_unique",
           "columns": [
@@ -77,30 +91,30 @@
         }
       },
       "foreignKeys": {
-        "Tokens_organisationId_Organisations_id_fk": {
-          "name": "Tokens_organisationId_Organisations_id_fk",
+        "Tokens_organisationUuid_Organisations_uuid_fk": {
+          "name": "Tokens_organisationUuid_Organisations_uuid_fk",
           "tableFrom": "Tokens",
           "tableTo": "Organisations",
           "columnsFrom": [
-            "organisationId"
+            "organisationUuid"
           ],
           "columnsTo": [
-            "id"
+            "uuid"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "Tokens_userId_Users_id_fk": {
-          "name": "Tokens_userId_Users_id_fk",
+        "Tokens_userUuid_Users_uuid_fk": {
+          "name": "Tokens_userUuid_Users_uuid_fk",
           "tableFrom": "Tokens",
           "tableTo": "Users",
           "columnsFrom": [
-            "userId"
+            "userUuid"
           ],
           "columnsTo": [
-            "id"
+            "uuid"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -110,16 +124,16 @@
     "UsersOrganisations": {
       "name": "UsersOrganisations",
       "columns": {
-        "userId": {
-          "name": "userId",
-          "type": "integer",
+        "userUuid": {
+          "name": "userUuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
         },
-        "organisationId": {
-          "name": "organisationId",
-          "type": "integer",
+        "organisationUuid": {
+          "name": "organisationUuid",
+          "type": "text",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
@@ -127,30 +141,30 @@
       },
       "indexes": {},
       "foreignKeys": {
-        "UsersOrganisations_userId_Users_id_fk": {
-          "name": "UsersOrganisations_userId_Users_id_fk",
+        "UsersOrganisations_userUuid_Users_uuid_fk": {
+          "name": "UsersOrganisations_userUuid_Users_uuid_fk",
           "tableFrom": "UsersOrganisations",
           "tableTo": "Users",
           "columnsFrom": [
-            "userId"
+            "userUuid"
           ],
           "columnsTo": [
-            "id"
+            "uuid"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "UsersOrganisations_organisationId_Organisations_id_fk": {
-          "name": "UsersOrganisations_organisationId_Organisations_id_fk",
+        "UsersOrganisations_organisationUuid_Organisations_uuid_fk": {
+          "name": "UsersOrganisations_organisationUuid_Organisations_uuid_fk",
           "tableFrom": "UsersOrganisations",
           "tableTo": "Organisations",
           "columnsFrom": [
-            "organisationId"
+            "organisationUuid"
           ],
           "columnsTo": [
-            "id"
+            "uuid"
           ],
-          "onDelete": "no action",
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -160,9 +174,9 @@
     "Users": {
       "name": "Users",
       "columns": {
-        "id": {
-          "name": "id",
-          "type": "integer",
+        "uuid": {
+          "name": "uuid",
+          "type": "text",
           "primaryKey": true,
           "notNull": true,
           "autoincrement": false
@@ -197,6 +211,13 @@
         }
       },
       "indexes": {
+        "Users_uuid_unique": {
+          "name": "Users_uuid_unique",
+          "columns": [
+            "uuid"
+          ],
+          "isUnique": true
+        },
         "Users_username_unique": {
           "name": "Users_username_unique",
           "columns": [

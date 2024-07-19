@@ -39,7 +39,6 @@ export async function PUT(req: NextRequest) {
       cache: "no-store",
       body: JSON.stringify(await req.json())
     })
-    const data = await res.json()
     return NextResponse.json(
       { status: res.status }
     );

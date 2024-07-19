@@ -1,13 +1,13 @@
 'use client'
 import React, {useState} from "react";
 import LoadingSpinner from "@/components/loading-spinner";
-import { toast, ToastContainer } from 'react-toastify';
 import "react-toastify/dist/ReactToastify.css";
-import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
 import {Session, User} from "@/app/settings/subscriptions/[uuid]/page";
 import {DBOrganisation} from "@/app/api/organisations/[id]/route";
+import {Modal} from "@/components/modal";
+import {usePathname, useRouter, useSearchParams} from "next/navigation";
 
 export default function Dashboard() {
   return (
@@ -15,7 +15,6 @@ export default function Dashboard() {
       <Head><title>Salable Seats Demo</title></Head>
       <main>
         <div className="w-full font-sans text-sm">
-          <ToastContainer/>
           <Main/>
         </div>
       </main>
@@ -24,11 +23,23 @@ export default function Dashboard() {
 }
 
 const Main = () => {
-  const [inviteLink, setInviteLink] = useState<string | null>(null);
-  const [isFetchingInviteLink, setIsFetchingInviteLink] = useState(false);
-  const {data: session} = useSWR<Session>(`/api/session`)
-  const {data: users, isLoading} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
-  const {data: organisation, isLoading: organisationIsLoading} = useSWR<DBOrganisation>(`/api/organisations/${session?.organisationId}`)
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
+  const {
+    data: users,
+    mutate: mutateUsers,
+    isLoading
+  } = useSWR<User[]>(`/api/organisations/${session?.organisationUuid}/users`)
+  const {
+    data: organisation,
+    isLoading: organisationIsLoading
+  } = useSWR<DBOrganisation>(`/api/organisations/${session?.organisationUuid}`)
+  const isModalOpen = searchParams.get("modalOpen")
+  if (!isValidatingSession && !isLoading && !session?.uuid) {
+    router.push("/")
+  }
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
@@ -36,11 +47,37 @@ const Main = () => {
         <div className='mb-6'>
           {!isLoading && users?.length ? (
             <div>
-              {users.filter((u) => u.username).map((user, i) => {
+              {users.map((user, i) => {
                 return (
-                  <div className='mb-1 p-2 bg-white rounded-sm shadow' key={user.id}>
-                    <div className='flex justify-between'>
+                  <div className='mb-1 p-2 bg-white rounded-sm shadow' key={user.uuid}>
+                    <div className='flex justify-between items-center'>
                       <p className='mr-2'>{user.username} <span className='text-gray-500 italic text-sm'>({user.email})</span></p>
+                      {user.uuid === session?.uuid ? <div className='p-2 border-2 rounded-md text-gray-500 bg-gray-200 text-xs'>You</div> : null}
+                      {user.username && session && user.uuid !== session.uuid ? (
+                        <DeleteUser userUuid={user.uuid} />
+                      ) : null}
+                      {!user.username && user.email ? (
+                        <div>
+                          <span className='p-1 bg-yellow-300 text-xs rounded-sm mr-2'>Pending</span>
+                          <button
+                            className='p-2 border-2 rounded-md text-gray-500 text-xs'
+                            onClick={async () => {
+                              try {
+                                const res = await fetch(`/api/tokens?email=${user.email}`)
+                                const data = await res.json()
+                                if (res.ok) {
+                                  const link = `http://localhost:3000/accept-invite?token=${data.value}`
+                                  await navigator.clipboard.writeText(link);
+                                }
+                              } catch (e) {
+                                console.log(e)
+                              }
+                            }}
+                          >
+                            Copy invite link
+                          </button>
+                        </div>
+                      ) : null}
                     </div>
                   </div>
                 );
@@ -53,44 +90,53 @@ const Main = () => {
           )}
         </div>
 
-        {session?.organisationId ? (
+        {session?.organisationUuid ? (
           <div className='flex justify-end'>
             <button
               onClick={async () => {
-                try {
-                  setIsFetchingInviteLink(true)
-                  const res = await fetch('/api/tokens', {
-                    method: 'POST',
-                    body: JSON.stringify({organisationId: session.organisationId})
-                  })
-                  const data = await res.json() as {token: string}
-                  if (!res.ok) {
-                    toast.error("Error creating invite link")
-                    setIsFetchingInviteLink(false)
-                    return
-                  }
-                  const link = `http://localhost:3000/accept-invite?token=${data.token}`
-                  setInviteLink(link)
-                  await navigator.clipboard.writeText(link);
-                  toast.success("Invite link copied")
-                  setIsFetchingInviteLink(false)
-                } catch (e) {
-                  setIsFetchingInviteLink(false)
-                  console.log(e)
-                }
+                const params = new URLSearchParams(searchParams.toString())
+                params.set("modalOpen", "true")
+                router.push(pathname + '?' + params.toString())
               }}
               className={`p-4 text-white rounded-md leading-none bg-blue-700`}
-            >{!isFetchingInviteLink ? "Invite user" : <div className='w-[20px]'><LoadingSpinner fill="white"/></div>}
+            >
+              Invite user
             </button>
           </div>
         ) : null}
 
-        {inviteLink ? (
-          <div className='mt-6 p-2 border-2 truncate text-ellipsis overflow-hidden bg-white'>
-            <p>{inviteLink}</p>
-          </div>
+        {isModalOpen ? (
+          <Modal />
         ) : null}
       </div>
+    </>
+  )
+}
+
+const DeleteUser = ({userUuid}: {userUuid: string}) => {
+  const {data: session} = useSWR<Session>(`/api/session`)
+  const {mutate: mutateUsers} = useSWR<User[]>(`/api/organisations/${session?.organisationUuid}/users`)
+  const [isDeletingUser, setIsDeletingUser] = useState(false)
+  return (
+    <>
+      <button
+        className='text-red-600 p-2 border-2 rounded-md border-red-600 text-xs'
+        onClick={async () => {
+          try {
+            setIsDeletingUser(true)
+            await fetch(`/api/users/${userUuid}`, {
+              method: 'DELETE',
+            })
+            await mutateUsers()
+          } catch (e) {
+            console.log(e)
+          }
+        }}
+      >
+        {!isDeletingUser ? "Delete" : (
+          <div className='w-[15px]'><LoadingSpinner fill="#dc2726"/></div>
+        )}
+      </button>
     </>
   )
 }

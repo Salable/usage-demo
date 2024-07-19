@@ -1,11 +1,11 @@
 'use client'
 import React, {useRef, useState} from "react";
 import Link from "next/link";
-import {LockIcon} from "@/components/lock-icon";
-import {TickIcon} from "@/components/tick-icon";
+import {LockIcon} from "@/components/icons/lock-icon";
+import {TickIcon} from "@/components/icons/tick-icon";
 import Head from "next/head";
 import Image from "next/image";
-import {DownIcon} from "@/components/down-icon";
+import {DownIcon} from "@/components/icons/down-icon";
 import LoadingSpinner from "@/components/loading-spinner";
 import {useOnClickOutside} from "usehooks-ts";
 import {Resolver, useForm} from "react-hook-form";
@@ -61,7 +61,7 @@ const resolver: Resolver<FormValues> = async (values) => {
 };
 
 const Main = () => {
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
+  const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
   const router = useRouter()
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -69,7 +69,15 @@ const Main = () => {
         method: 'post',
         body: JSON.stringify(data)
       })
-      if (res.ok) router.push('/')
+      if (!res.ok) {
+        const data = await res.json()
+        setError("root.serverError", {
+          type: "400",
+          message: data.error
+        })
+        return
+      }
+      router.push('/')
     } catch (e) {
       console.log(e)
     }
@@ -91,6 +99,12 @@ const Main = () => {
         <div className='mb-4'>
           <button className={`p-4 text-white rounded-md leading-none bg-blue-700`}>{!isSubmitting ? "Sign in" : <div className='w-[15px]'><LoadingSpinner fill="white" /></div>}</button>
         </div>
+
+        {errors.root?.serverError ? (
+          <div className='bg-red-500 text-white p-2 rounded-sm'>
+            {errors.root?.serverError.message}
+          </div>
+        ) : null}
 
         <p>Haven't got an account? <Link className='text-blue-500' href="/sign-up">Sign up</Link></p>
 

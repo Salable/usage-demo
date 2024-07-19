@@ -1,10 +1,9 @@
 'use client'
-import React from "react";
+import React, {useState} from "react";
 import Head from "next/head";
 import {Resolver, useForm} from "react-hook-form";
 import {useRouter, useSearchParams} from "next/navigation";
 import LoadingSpinner from "@/components/loading-spinner";
-import {toast, ToastContainer} from "react-toastify";
 
 export default function AcceptInvite() {
   return (
@@ -14,7 +13,6 @@ export default function AcceptInvite() {
       </Head>
       <main>
         <div className="w-full font-sans text-sm">
-          <ToastContainer />
           <Main />
         </div>
       </main>
@@ -59,19 +57,22 @@ const Main = () => {
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
   const licenseUuid = searchParams.get('licenseUuid')
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
+  const { register, handleSubmit, setError, formState: { errors, isSubmitting,  } } = useForm<FormValues>({ resolver });
   const onSubmit = handleSubmit(async (data) => {
     try {
       const userResponse = await fetch('/api/accept-invite', {
         method: 'post',
         body: JSON.stringify({...data, token, licenseUuid})
       })
-      if (userResponse.ok) {
-        router.push('/')
-      } else {
-        // const data = await userResponse.json()
-        // if (data.error) toast.error(data.error)
+      if (!userResponse.ok) {
+        const data = await userResponse.json()
+        setError("root.serverError", {
+          type: "400",
+          message: data.error
+        })
+        return
       }
+      router.push('/')
     } catch (e) {
       console.log(e)
     }
@@ -98,6 +99,11 @@ const Main = () => {
               {!isSubmitting ? "Sign up" : <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}
             </button>
           </div>
+          {errors.root?.serverError ? (
+            <div className='bg-red-500 text-white p-2 rounded-sm'>
+              {errors.root?.serverError.message}
+            </div>
+          ) : null}
         </form>
       </div>
     </>

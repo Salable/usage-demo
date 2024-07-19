@@ -1,12 +1,12 @@
 import {NextRequest, NextResponse} from "next/server";
-import {randomBytes} from "crypto";
+import {randomBytes, randomUUID} from "crypto";
 import {db} from "@/drizzle/drizzle";
 import {organisationsTable, tokensTable, usersOrganisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {env} from "@/app/environment";
 
 type CreateTokenRequestBody = {
-  organisationId: string;
+  organisationUuid: string;
   email: string;
   licenseUuid?: string;
 }
@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
 
     const existingTokensResult = await db.select()
       .from(tokensTable)
-      .where(eq(tokensTable.userId, user.id))
+      .where(eq(tokensTable.userUuid, user.uuid))
     if (existingTokensResult.length === 0) return NextResponse.json({status: 404});
 
     const token = existingTokensResult[0]
@@ -45,40 +45,35 @@ export async function POST(req: NextRequest) {
   try {
     const body: CreateTokenRequestBody = await req.json()
 
-    console.log(1)
-
-    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.id, Number(body.organisationId)))
+    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.uuid, body.organisationUuid))
     if (existingOrganisationsResult.length === 0) throw new Error("Organisation does not exist")
 
     const createUser = await db.insert(usersTable).values({
+      uuid: randomUUID(),
       username: null,
       email: body.email,
       salt: null,
       hash: null,
     }).returning();
 
-    console.log(2)
-
     const user = createUser[0]
 
     await db.insert(usersOrganisationsTable).values({
-      userId: user.id,
-      organisationId: existingOrganisationsResult[0].id,
+      userUuid: createUser[0].uuid,
+      organisationUuid: existingOrganisationsResult[0].uuid,
     }).returning();
 
-    console.log(3)
+
 
     const token = randomBytes(32).toString('hex')
-    await db.insert(tokensTable).values({
+    const tokenDB = await db.insert(tokensTable).values({
+      uuid: randomUUID(),
       value: token,
-      organisationId: existingOrganisationsResult[0].id,
-      userId: user.id
+      organisationUuid: existingOrganisationsResult[0].uuid,
+      userUuid: user.uuid
     }).returning();
 
-    console.log(4)
-
     if (body.licenseUuid) {
-      console.log(5)
       const updateLicense = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/${body.licenseUuid}`, {
         method: "PUT",
         headers: {
@@ -86,15 +81,13 @@ export async function POST(req: NextRequest) {
           version: 'v2',
         },
         body: JSON.stringify({
-          granteeId: user.id.toString()
+          granteeId: user.uuid
         })
       })
       if (!updateLicense.ok) {
         throw new Error("Failed to assign license")
       }
     }
-
-    console.log(6)
 
     return NextResponse.json({token},
       { status: 200 }

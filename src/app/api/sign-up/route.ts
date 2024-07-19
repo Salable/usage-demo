@@ -1,5 +1,5 @@
 import {NextRequest, NextResponse} from "next/server";
-import {randomBytes} from "crypto";
+import {randomBytes, randomUUID} from "crypto";
 import {hashString} from "@/utils/hash-string";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
@@ -28,9 +28,12 @@ export async function POST(req: NextRequest) {
     const salt = randomBytes(16).toString('hex');
     const hash = hashString(body.password, salt)
 
-    const createOrg = await db.insert(organisationsTable).values({name: body.organisationName}).returning();
+    const createOrg = await db.insert(organisationsTable).values({
+      uuid: randomUUID(),
+      name: body.organisationName}).returning();
     const organisation = createOrg[0]
     const createUser = await db.insert(usersTable).values({
+      uuid: randomUUID(),
       username: body.username,
       email: body.email,
       salt,
@@ -38,15 +41,15 @@ export async function POST(req: NextRequest) {
     }).returning();
     const user = createUser[0]
 
-    await db.insert(usersOrganisationsTable).values({userId: user.id, organisationId: organisation.id});
+    await db.insert(usersOrganisationsTable).values({userUuid: user.uuid, organisationUuid: organisation.uuid});
 
     const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-    session.id = user.id.toString();
-    session.organisationId = organisation.id.toString()
+    session.uuid = user.uuid;
+    session.organisationUuid = organisation.uuid
     if (user.email) session.email = user.email
     await session.save();
 
-    return NextResponse.json({id: user.id, organisationId: organisation.id},
+    return NextResponse.json({uuid: user.uuid, email: user.email, organisationUuid: organisation.uuid},
       { status: 200 }
     );
   } catch (e) {

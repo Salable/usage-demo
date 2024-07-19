@@ -5,18 +5,18 @@ import {eq} from "drizzle-orm";
 
 export async function GET(req: NextRequest, {params}: {params: {id: string | undefined}}) {
   try {
-    if (!params.id) NextResponse.json({status: 404})
-    // TODO filter out null users in query
+    if (!params.id) return NextResponse.json({status: 404})
+
     const users = await db.select()
       .from(usersOrganisationsTable)
-      .rightJoin(usersTable, eq(usersOrganisationsTable.userId, usersTable.id))
-      .where(eq(usersOrganisationsTable.organisationId, Number(params.id)))
+      .rightJoin(usersTable, eq(usersOrganisationsTable.userUuid, usersTable.uuid))
+      .where(eq(usersOrganisationsTable.organisationUuid, params.id))
     if (users.length === 0) throw new Error("No users found")
 
     return NextResponse.json(
       users.map((u) => {
-        const {id, email, username} = u.Users
-        return ({id, email, username});
+        const {uuid, email, username} = u.Users
+        return ({uuid, email, username});
       }),
       {status: 200}
     )

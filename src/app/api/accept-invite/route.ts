@@ -4,9 +4,9 @@ import {hashString} from "@/utils/hash-string";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 import {db} from "@/drizzle/drizzle";
-import {tokensTable, usersOrganisationsTable, usersTable} from "@/drizzle/schema";
+import {tokensTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
-import {env} from "@/app/environment";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 type AcceptInviteRequestBody = {
   token: string
@@ -37,18 +37,19 @@ export async function POST(req: NextRequest) {
         salt,
         hash
       })
-      .where(eq(usersTable.id, token.userId))
+      .where(eq(usersTable.uuid, token.userUuid))
       .returning();
 
 
     const user = updateUser[0]
 
-    const session = await getIronSession<{id: string; organisationId: string}>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-    session.id = user.id.toString();
-    session.organisationId = token.organisationId.toString()
+    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    session.uuid = user.uuid;
+    session.organisationUuid = token.organisationUuid
+    if (user.email) session.email = user.email
     await session.save();
 
-    return NextResponse.json({id: user.id, organisationId: token.organisationId},
+    return NextResponse.json({id: user.uuid, organisationUuid: token.organisationUuid},
       { status: 200 }
     );
   } catch (e) {

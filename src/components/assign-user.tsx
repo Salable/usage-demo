@@ -18,7 +18,7 @@ export const AssignUser = (
   const pathname = usePathname()
   const [showUsers, setShowUsers] = useState<boolean>(false);
   const {data: session} = useSWR<Session>(`/api/session`)
-  const {data: users, isLoading: usersIsLoading} = useSWR<User[]>(`/api/organisations/${session?.organisationId}/users`)
+  const {data: users, isLoading: usersIsLoading} = useSWR<User[]>(`/api/organisations/${session?.organisationUuid}/users`)
   const {data: licenses, mutate: licensesMutate} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${subscriptionUuid}&status=active`)
   const {data: licenseCount, mutate: licenseCountMutate, isLoading: licenseCountLoading} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${subscriptionUuid}&status=active`)
   const granteeIds = new Set(licenses?.data.map((l) => l.granteeId))
@@ -29,11 +29,13 @@ export const AssignUser = (
   useOnClickOutside(ref, clickOutside)
   const isPending = assignedUser && !assignedUser.username
 
+  const nonLicensedUsers = users?.filter((u) => !granteeIds.has(u.uuid) && u.username)
+
   return (
     <div className={`border-b-2`} ref={ref}>
-      <div className='p-2 flex justify-between'>
+      <div className='p-4 flex justify-between'>
         <div>
-          <div className='flex items-center p-2 cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
+          <div className='flex items-center cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
             <div className='rounded-full mr-3'>
               <div className='w-[38px] h-[38px] cursor-pointer rounded-full bg-blue-200 leading-none flex items-center justify-center'>
                 <span>{!isPending ? assignedUser?.username?.[0].toUpperCase() : "?"}</span>
@@ -43,15 +45,15 @@ export const AssignUser = (
               {assignedUser?.username ? (
                 <div>{assignedUser.username}</div>
               ) : null}
-              {!assignedUser ? (
+              {!assignedUser && nonLicensedUsers?.length ? (
                 <div>Assign Seat</div>
               ) : null}
-              {assignedUser && <div className='text-xs text-gray-500'>{assignedUser.email}</div>}
+              {assignedUser ? <div className='text-xs text-gray-500'>{assignedUser.email}</div> : null}
             </div>
           </div>
           {!usersIsLoading && showUsers && users?.length ? (
             <div className='absolute border-2 bg-white'>
-              {users.filter((u) => !granteeIds.has(u.id.toString()) && u.username).map((user, i) => (
+              {nonLicensedUsers?.map((user, i) => (
                 <div
                   className='flex items-center p-2 cursor-pointer hover:bg-gray-200' key={`${i}_assign_users`}
                   onClick={async () => {
@@ -59,7 +61,7 @@ export const AssignUser = (
                      method: 'PUT',
                      body: JSON.stringify([{
                        uuid: license.uuid,
-                       granteeId: user.id.toString()
+                       granteeId: user.uuid
                      }])
                    })
                    await licensesMutate()

@@ -6,6 +6,8 @@ import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
+import {useRouter} from "next/navigation";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 export type SalableSubscription = {
   uuid: string;
@@ -53,8 +55,12 @@ export default function Dashboard() {
 }
 
 const Main = () => {
+  const router = useRouter()
   const {data, isLoading} = useSWR<GetAllSubscriptionsResponse>('/api/subscriptions')
-
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
+  if (!isValidatingSession && !isLoading && !session?.uuid) {
+    router.push("/")
+  }
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
