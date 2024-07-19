@@ -221,7 +221,7 @@ const Main = ({uuid}: {uuid: string}) => {
                                     const res = await fetch(`/api/tokens?email=${u.email}`)
                                     const data = await res.json()
                                     if (res.ok) {
-                                      const link = `http://localhost:3000/accept-invite?token=${data.value}${licenseUuid ? "&licenseUuid="+licenseUuid : ""}`
+                                      const link = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accept-invite?token=${data.value}${licenseUuid ? "&licenseUuid="+licenseUuid : ""}`
                                       await navigator.clipboard.writeText(link);
                                     }
                                   } catch (e) {

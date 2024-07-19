@@ -91,8 +91,8 @@ const Main = () => {
           customerEmail: user.email,
           granteeId: user.uuid,
           member: user.organisationUuid,
-          successUrl: 'http://localhost:3000',
-          cancelUrl: 'http://localhost:3000/cancel',
+          successUrl: process.env.NEXT_PUBLIC_APP_BASE_URL as string,
+          cancelUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/cancel`,
         })
         const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${planUuid}/checkoutlink?${params.toString()}`, {
           headers: {'x-api-key': process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ as string}

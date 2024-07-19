@@ -77,7 +77,7 @@ export const Modal = () => {
         })
         return
       }
-      const link = `http://localhost:3000/accept-invite?token=${data.token}`
+      const link = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accept-invite?token=${data.token}`
       await navigator.clipboard.writeText(link);
       removeQueryParams()
       await mutateUsers()

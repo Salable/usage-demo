@@ -66,7 +66,7 @@ const Main = () => {
                                 const res = await fetch(`/api/tokens?email=${user.email}`)
                                 const data = await res.json()
                                 if (res.ok) {
-                                  const link = `http://localhost:3000/accept-invite?token=${data.value}`
+                                  const link = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accept-invite?token=${data.value}`
                                   await navigator.clipboard.writeText(link);
                                 }
                               } catch (e) {
