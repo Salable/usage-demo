@@ -1,6 +1,8 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest, { params }: { params: { uuid: string } }) {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/events/${params.uuid}`, {

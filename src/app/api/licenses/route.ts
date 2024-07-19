@@ -1,6 +1,7 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   const subscriptionUuid = req.nextUrl.searchParams.get('subscriptionUuid')

@@ -16,6 +16,8 @@ type AcceptInviteRequestBody = {
   licenseUuid?: string
 }
 
+export const revalidate = 0
+
 export async function POST(req: NextRequest) {
   try {
     const body: AcceptInviteRequestBody = await req.json()

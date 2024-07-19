@@ -4,6 +4,8 @@ import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {

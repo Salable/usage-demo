@@ -15,6 +15,8 @@ type SignUpRequestBody = {
   password: string
 }
 
+export const revalidate = 0
+
 export async function POST(req: NextRequest) {
   try {
     const body: SignUpRequestBody = await req.json()

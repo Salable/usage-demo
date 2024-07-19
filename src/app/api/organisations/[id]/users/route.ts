@@ -3,6 +3,8 @@ import {db} from "@/drizzle/drizzle";
 import {usersOrganisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest, {params}: {params: {id: string | undefined}}) {
   try {
     if (!params.id) return NextResponse.json({status: 404})

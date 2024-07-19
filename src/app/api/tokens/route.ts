@@ -11,6 +11,8 @@ type CreateTokenRequestBody = {
   licenseUuid?: string;
 }
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest) {
   try {
     const email = req.nextUrl.searchParams.get('email')

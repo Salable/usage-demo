@@ -14,7 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <SWRConfig value={{fetcher: (url) => fetch(url).then(res => res.json()).catch(() => void 0)}}>
+    <SWRConfig value={{
+      fetcher: (url) => fetch(url).then(res => res.json()).catch(() => void 0),
+    }}>
       <html lang="en" className='bg-gray-100'>
         <body className={`${inter.className}`}>
           <Header />

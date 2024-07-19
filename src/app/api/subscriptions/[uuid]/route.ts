@@ -3,6 +3,8 @@ import {env} from "@/app/environment";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest, params: {params: {uuid: string}}) {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.params.uuid}?expand=[plan.currencies]`, {

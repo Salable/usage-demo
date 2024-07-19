@@ -8,6 +8,8 @@ export type DBOrganisation = {
   name: string;
 }
 
+export const revalidate = 0
+
 export async function GET(req: NextRequest, {params}: {params: {id: string}}) {
   try {
     if (!params.id) NextResponse.json({status: 404})

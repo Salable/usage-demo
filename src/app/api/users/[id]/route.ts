@@ -4,6 +4,8 @@ import {organisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {env} from "@/app/environment";
 
+export const revalidate = 0
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/granteeId/${params.id}`, {

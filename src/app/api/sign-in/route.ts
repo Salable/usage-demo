@@ -20,6 +20,8 @@ export type DBUser = {
   hash: string
 }
 
+export const revalidate = 0
+
 export async function POST(req: NextRequest) {
   try {
     const body: SignInRequestBody = await req.json()
