@@ -1,23 +1,25 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
-import {unlink} from "node:fs";
+import {cookies} from "next/headers";
+import {getIronSession} from "iron-session";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
-  const searchParams = new URL(req.url).searchParams
-  const params =new URLSearchParams(searchParams);
-  if (!params.get('granteeIds')) {
-    return NextResponse.json(
-      { error: 'granteeIds param not found' },
-      { status: 400 }
-    );
-  }
-  const granteeIds = params.get('granteeIds')
-
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses/check?granteeIds=${granteeIds}&productUuid=${env.PRODUCT_UUID}`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/check?granteeIds=${session.uuid}&productUuid=${env.PRODUCT_UUID}`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY },
       cache: "no-store"
     })
+    const headers = new Headers(res.headers)
+    const headersMap = new Map(headers)
+    if (headersMap.get('content-type') === 'text/plain') {
+      return NextResponse.json(
+        { status: res.status }
+      );
+    }
     const data = await res.json()
     return NextResponse.json(
       data, { status: res.status }

@@ -1,10 +1,14 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 
+export const revalidate = 0
 
 export async function GET(req: NextRequest) {
+  const subscriptionUuid = req.nextUrl.searchParams.get('subscriptionUuid')
+  let url = `${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/count?status=active`
+  if (subscriptionUuid) url += `&subscriptionUuid=${subscriptionUuid}`;
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/licenses/count?subscriptionUuid=${env.SUBSCRIPTION_UUID}&status=active`, {
+    const res = await fetch(url, {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
       },

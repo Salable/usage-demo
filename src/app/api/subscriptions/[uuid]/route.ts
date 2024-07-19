@@ -2,14 +2,12 @@ import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
-import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 export const revalidate = 0
 
-export async function GET(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+export async function GET(req: NextRequest, params: {params: {uuid: string}}) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions?email=${session.email}&status=active&expand=plan`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.params.uuid}?expand=[plan.currencies]`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY, version: 'v2' },
     })
     const data = await res.json()
