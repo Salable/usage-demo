@@ -240,7 +240,7 @@ const Main = ({uuid}: {uuid: string}) => {
                 </div>
 
                 <div>
-                <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
+                  <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
                     <div className='text-xl text-center mb-2'>Update seat count</div>
                     <div className='mb-2 text-center'>To change the seat count you will need to update your subscription
                       which will incur a change to your billing.
