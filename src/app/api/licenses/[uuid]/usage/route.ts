@@ -4,16 +4,15 @@ import {randomUUID} from "node:crypto";
 
 export async function GET(req: NextRequest, { params }: { params: { uuid: string } }) {
   try {
-    const res = await fetch(`https://6h12fk1bmd.execute-api.eu-west-2.amazonaws.com/dev/licenses/${params.uuid}/usage`, {
+    const res = await fetch(`${env.SALABLE_API_BASE_URL}/usage`, {
       method: "GET",
       headers: {
-        'x-api-key': env.DEV_SALABLE_API_KEY,
+        'x-api-key': env.SALABLE_API_KEY,
         version: 'v2',
       },
       cache: "no-store",
     })
     const data = await res.json()
-    console.log(data)
     return NextResponse.json(
       data, { status: res.status }
     );
@@ -30,10 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: { uuid: string
 export async function PUT(req: NextRequest, { params }: { params: { uuid: string } }) {
   try {
     const increment = await req.json()
-    const res = await fetch(`https://6h12fk1bmd.execute-api.eu-west-2.amazonaws.com/dev/usage`, {
+    const res = await fetch(`${env.SALABLE_API_BASE_URL}/usage`, {
       method: "PUT",
       headers: {
-        'x-api-key': env.DEV_SALABLE_API_KEY,
+        'x-api-key': env.SALABLE_API_KEY,
         version: 'v2',
         'unique-key': randomUUID()
       },
