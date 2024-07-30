@@ -8,7 +8,7 @@ import {useRouter} from "next/navigation";
 import {useOnClickOutside} from "usehooks-ts";
 import {SalableLogo} from "@/components/salable-logo";
 import {LicenseCheckResponse} from "@/app/page";
-import {GetAllSubscriptionsResponse} from "@/app/settings/page";
+import {GetAllSubscriptionsResponse} from "@/app/api/subscriptions/route";
 
 export const Header = () => {
   const router = useRouter();
@@ -43,7 +43,7 @@ export const Header = () => {
                   <div className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow'>
                     <div className='p-3 block f-full border-b text-sm text-center'>Hello, {user.username}</div>
                     {subscriptions?.data.length ?
-                      <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/subscriptions/'+subscriptions?.data?.[0].uuid}>Subscriptions</Link> : null }
+                      <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/subscriptions'}>Subscriptions</Link> : null }
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/organisations'}>Organisations</Link>
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/'}>Capabilities</Link>
                     <button className='p-3 block f-full text-right hover:bg-gray-50 text-sm' onClick={async () => {
