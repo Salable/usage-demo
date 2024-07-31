@@ -11,6 +11,7 @@ import useSWR from "swr";
 import {License, Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {CrossIcon} from "@/components/icons/cross-icon";
 import {LicenseCheckResponse} from "@/app/page";
+import {isArray} from "node:util";
 
 export default function Usage() {
   return (
@@ -34,8 +35,8 @@ const Main = () => {
   const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check?productUuid=${process.env.NEXT_PUBLIC_USAGE_PRODUCT_UUID}`)
   const {data: licensesForGranteeId, isLoading: isLoadingLicensesForGranteeId, isValidating: isValidatingLicensesForGranteeId} = useSWR<License[]>(`/api/licenses/granteeId`)
 
-  const usageLicenses = licensesForGranteeId?.filter((l) => l.productUuid === process.env.NEXT_PUBLIC_USAGE_PRODUCT_UUID && l.status !== 'CANCELED' )
-  const basicUsageLicense = usageLicenses?.find((l) => l.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_USAGE_PLAN_UUID)
+  const usageLicenses = Array.isArray(licensesForGranteeId) && licensesForGranteeId?.filter((l) => l.productUuid === process.env.NEXT_PUBLIC_USAGE_PRODUCT_UUID && l.status !== 'CANCELED' )
+  const basicUsageLicense = Array.isArray(usageLicenses) && usageLicenses?.find((l) => l.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_USAGE_PLAN_UUID)
 
   return (
     <>

@@ -16,6 +16,13 @@ export async function GET(req: NextRequest) {
       },
       cache: "no-store"
     })
+    const headers = new Headers(res.headers)
+    const headersMap = new Map(headers)
+    if (headersMap.get('content-type') === 'text/plain') {
+      return NextResponse.json(
+        { status: res.status }
+      );
+    }
     const data = await res.json()
     return NextResponse.json(
       data, { status: res.status }
