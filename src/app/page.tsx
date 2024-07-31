@@ -37,7 +37,7 @@ export default function Home() {
 const Main = () => {
   const router = useRouter()
   const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
-  const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check`)
+  const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check?productUuid=${process.env.NEXT_PUBLIC_PRODUCT_UUID}`)
 
   return (
     <>

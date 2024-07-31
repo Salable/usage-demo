@@ -4,10 +4,8 @@ import {env} from "@/app/environment";
 export const revalidate = 0
 
 export async function PUT(req: NextRequest,  {params}: {params:{uuid: string}}) {
-  console.log('PUT CHANGE SUB')
   try {
     const body = await req.json()
-    console.log(body)
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.uuid}/change-plan`, {
       method: 'put',
       headers: {

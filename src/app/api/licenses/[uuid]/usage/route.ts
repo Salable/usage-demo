@@ -4,7 +4,12 @@ import {randomUUID} from "node:crypto";
 
 export async function GET(req: NextRequest, { params }: { params: { uuid: string } }) {
   try {
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/usage`, {
+    if (!params.uuid) {
+      return NextResponse.json(
+        { status: 404 }
+      );
+    }
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/${params.uuid}/usage`, {
       method: "GET",
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
@@ -29,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: { uuid: string
 export async function PUT(req: NextRequest, { params }: { params: { uuid: string } }) {
   try {
     const increment = await req.json()
-    const res = await fetch(`${env.SALABLE_API_BASE_URL}/usage`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/usage`, {
       method: "PUT",
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
