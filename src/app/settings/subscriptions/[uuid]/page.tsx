@@ -30,6 +30,9 @@ export type License = {
   uuid: string;
   startTime: string;
   granteeId: string;
+  productUuid: string;
+  planUuid: string;
+  status: string;
 }
 export type Session = {
   uuid: string;
@@ -67,6 +70,17 @@ const Main = ({uuid}: {uuid: string}) => {
   const {data: subscription, mutate: mutateSubscription } = useSWR<SalableSubscription>(`/api/subscriptions/${uuid}`)
   const {data: licenses, mutate: mutateLicenses, isLoading: isLoadingLicenses, isValidating: isValidatingLicenses} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${uuid}${subscription?.status !== 'CANCELED' ? "&status=active" : ""}`)
   const {data: licenseCount, mutate: mutateLicenseCount, isLoading: isLoadingLicenseCount,  isValidating: isValidatingLicenseCount} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${uuid}&status=active`)
+  const {data: licensesForGranteeId, isLoading: isLoadingLicensesForGranteeId, isValidating: isValidatingLicensesForGranteeId} = useSWR<License[]>(`/api/licenses/granteeId`)
+  const usageLicenses = licensesForGranteeId?.filter((l) => l.productUuid === process.env.NEXT_PUBLIC_USAGE_PRODUCT_UUID && l.status !== 'CANCELED' )
+  const basicUsageLicense = usageLicenses?.find((l) => l.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_USAGE_PLAN_UUID)
+  const {data: usageOnLicense, isLoading: isLoadingUsageOnLicense, isValidating: isValidatingUsageOnLicense} = useSWR<{unitCount: number; updatedAt: string}>(`/api/licenses/${basicUsageLicense?.uuid}/usage`)
+  const date = usageOnLicense?.updatedAt ? new Date(new Date(usageOnLicense.updatedAt)).toLocaleString([], {
+    day: "numeric",
+    month: "short",
+    year: "2-digit",
+    hour: '2-digit',
+    minute:'2-digit'
+  }) : ''
 
   const licenseTotalHasChanged = updatedLicenseCount && licenseCount?.count !== updatedLicenseCount
 
@@ -210,7 +224,6 @@ const Main = ({uuid}: {uuid: string}) => {
           try {
             const subRes = await fetch(`/api/subscriptions/${uuid}`)
             const data = await subRes.json() as SalableSubscription
-            console.log(data?.planUuid, changingPlanUuid)
             if (data?.planUuid === changingPlanUuid) {
               clearInterval(subscriptionPolling)
               setIsPolling(false)
@@ -244,198 +257,252 @@ const Main = ({uuid}: {uuid: string}) => {
           </h1>
           {!isValidatingLicenseCount && !isLoadingLicenseCount && !isLoadingLicenses && !isValidatingLicenses ? (
             <div>
-              {subscription?.status === 'CANCELED' ? (
-                <div className='w-[300px]'>
-                  <div className='border-b-2 flex justify-between items-end py-4 mb-3'>
-                    <div>
-                      <div className='text-gray-500'>Plan</div>
-                      <div className='text-xl'>{subscription?.plan?.displayName}</div>
-                    </div>
-                    <div>
-                      <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
-                        <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <Price price={subscription.plan.currencies?.[0].price} count={Number(subscription.quantity)}
-                         interval={subscription.plan.interval} label="Total"/>
-                </div>
-              ) : null}
-              {subscription?.status !== 'CANCELED' ? (
+              {subscription?.plan.licenseType === 'metered' ? (
                 <>
-                  <div className='flex justify-between items-center'>
-                    <div className='mb-6 flex items-center'>
-                      <h2 className='text-2xl font-bold text-gray-900 mr-4'>Seats</h2>
-                      {disableButton ? (
-                        <div className='w-[20px]'><LoadingSpinner/></div>
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className='grid grid-cols-[2fr_1fr] gap-6'>
-                    <div>
-                      <div className='flex flex-col rounded-md shadow bg-white'>
-                        {licenses?.data?.sort((a, b) => {
-                          if (a.granteeId === null) return 1
-                          if (b.granteeId === null) return -1
-                          const aDate = new Date(a.startTime).getTime()
-                          const bDate = new Date(b.startTime).getTime()
-                          return aDate - bDate
-                        }).map((l, i) => {
-                          const assignedUser = users?.find((u) => u.uuid === l.granteeId) ?? null
-                          return (
-                            <React.Fragment key={`licenses_${i}`}>
-                              <AssignUser assignedUser={assignedUser} license={l} subscriptionUuid={uuid}
-                                          key={`assign_users_${i}`}/>
-                            </React.Fragment>
-                          );
-                        })}
-                      </div>
-                      <div className='flex items-start justify-between mt-3'>
+                  {subscription?.status === 'CANCELED' ? (
+                    <div className='w-[300px]'>
+                      <div className='border-b-2 flex justify-between items-end py-4 mb-3'>
                         <div>
-                          <span
-                            className='mr-4 leading-none text-xs text-gray-500'>{licenseCount?.assigned} out of {licenseCount?.count} seats assigned</span>
+                          <div className='text-gray-500'>Plan</div>
+                          <div className='text-xl'>{subscription?.plan?.displayName}</div>
                         </div>
                       </div>
-
-
-                      <div className='mt-3 flex justify-between'>
-                        <button
-                          className={`p-4 text-white rounded-md leading-none bg-blue-700`}
-                          onClick={async () => {
-                            await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
-                          }}
-                          disabled={disableButton}>
-                          {disableButton ? (
-                            <div className='w-[20px]'><LoadingSpinner fill="white"/></div>
-                          ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}
-                        </button>
-
-                        <button
-                          className={`p-4 text-blue-700 rounded-md leading-none border-blue-700 border-2`}
-                          onClick={async () => {
-                            await cancelSubscription()
-                          }}
-                          disabled={disableButton}>
-                          {disableButton ? (
-                            <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
-                          ) : "Cancel subscription"}
-                        </button>
+                    </div>
+                  ) : null}
+                  {subscription?.status !== 'CANCELED' ? (
+                    <>
+                      <div className='flex justify-between items-center'>
+                        <div className='mb-6'>
+                          <h2 className='text-2xl font-bold text-gray-900 mr-4'>Usage: {usageOnLicense?.unitCount}</h2>
+                          <div className='text-gray-500'>Last updated at {date.toString()}</div>
+                        </div>
                       </div>
+                      <div>
+                        <div className='mt-3 flex justify-between'>
+                          {/*<button*/}
+                          {/*  className={`p-4 text-white rounded-md leading-none bg-blue-700`}*/}
+                          {/*  onClick={async () => {*/}
+                          {/*    await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)*/}
+                          {/*  }}*/}
+                          {/*  disabled={disableButton}>*/}
+                          {/*  {disableButton ? (*/}
+                          {/*    <div className='w-[20px]'><LoadingSpinner fill="white"/></div>*/}
+                          {/*  ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}*/}
+                          {/*</button>*/}
 
-                      {users?.filter((u) => !u.username && u.email)?.length ? (
-                        <div className='mt-6'>
-                          <h2 className='text-2xl font-bold text-gray-900 mr-4 mb-6'>Pending invites</h2>
+                          <button
+                            className={`p-4 text-blue-700 rounded-md leading-none border-blue-700 border-2`}
+                            onClick={async () => {
+                              await cancelSubscription()
+                            }}
+                            disabled={disableButton}>
+                            {disableButton ? (
+                              <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
+                            ) : "Cancel subscription"}
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : null}
+                </>
+              ) : null}
 
+              {subscription?.plan.licenseType === 'perSeat' ? (
+                <>
+                  {subscription?.status === 'CANCELED' ? (
+                    <div className='w-[300px]'>
+                      <div className='border-b-2 flex justify-between items-end py-4 mb-3'>
+                        <div>
+                          <div className='text-gray-500'>Plan</div>
+                          <div className='text-xl'>{subscription?.plan?.displayName}</div>
+                        </div>
+                        <div>
+                          <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
+                            <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <Price price={subscription.plan.currencies?.[0].price} count={Number(subscription.quantity)}
+                             interval={subscription.plan.interval} label="Total"/>
+                    </div>
+                  ) : null}
+                  {subscription?.status !== 'CANCELED' ? (
+                    <>
+                      <div className='flex justify-between items-center'>
+                        <div className='mb-6 flex items-center'>
+                          <h2 className='text-2xl font-bold text-gray-900 mr-4'>Seats</h2>
+                          {disableButton ? (
+                            <div className='w-[20px]'><LoadingSpinner/></div>
+                          ) : null}
+                        </div>
+                      </div>
+                      <div className='grid grid-cols-[2fr_1fr] gap-6'>
+                        <div>
                           <div className='flex flex-col rounded-md shadow bg-white'>
-                            {users.filter((u) => !u.username && u.email).map((u, i) => {
-                              const licenseUuid = licenses?.data.find((l) => l.granteeId === u.uuid)?.uuid
+                            {licenses?.data?.sort((a, b) => {
+                              if (a.granteeId === null) return 1
+                              if (b.granteeId === null) return -1
+                              const aDate = new Date(a.startTime).getTime()
+                              const bDate = new Date(b.startTime).getTime()
+                              return aDate - bDate
+                            }).map((l, i) => {
+                              const assignedUser = users?.find((u) => u.uuid === l.granteeId) ?? null
                               return (
-                                <div className='p-3 bg-white border-b-2 flex justify-between items-center'>
-                                  {u.email}
-                                  <button
-                                    className='p-2 border-2 rounded-md text-gray-500 text-xs'
-                                    onClick={async () => {
-                                      try {
-                                        const res = await fetch(`/api/tokens?email=${u.email}`)
-                                        const data = await res.json()
-                                        if (res.ok) {
-                                          const link = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accept-invite?token=${data.value}${licenseUuid ? "&licenseUuid=" + licenseUuid : ""}`
-                                          await navigator.clipboard.writeText(link);
-                                        }
-                                      } catch (e) {
-                                        console.log(e)
-                                      }
-                                    }}
-                                  >
-                                    Copy invite link
-                                  </button>
-                                </div>
-                              )
+                                <React.Fragment key={`licenses_${i}`}>
+                                  <AssignUser assignedUser={assignedUser} license={l} subscriptionUuid={uuid}
+                                              key={`assign_users_${i}`}/>
+                                </React.Fragment>
+                              );
                             })}
                           </div>
-                        </div>
-                      ) : null}
-                    </div>
-
-                    <div>
-                      <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
-                        <div className='text-xl text-center mb-2'>Update seat count</div>
-                        <div className='mb-2 text-center'>To change the seat count you will need to update your
-                          subscription
-                          which will incur a change to your billing.
-                        </div>
-                        <div className='border-b-2 flex justify-center items-center pb-4'>
-                          {updatedLicenseCount && (
-                            <>
-                              <button
-                                className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
-                                onClick={() => {
-                                  if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount - 1);
-                                }}>
-                                -
-                              </button>
-                              <div className='px-4 text-xl'>
-                                <span>{updatedLicenseCount}</span>
-                              </div>
-                              <button
-                                className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
-                                onClick={() => {
-                                  if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount + 1);
-                                }}>
-                                +
-                              </button>
-                            </>
-                          )}
-                        </div>
-                        {subscription && updatedLicenseCount && licenseCount ? (
-                          <>
-                            <div className='border-b-2 flex justify-between items-end py-4'>
-                              <div>
-                                <div className='text-gray-500'>Current Plan</div>
-                                <div className='text-xl'>{subscription?.plan?.displayName}</div>
-                              </div>
-                              <div>
-                                <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
-                                  <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
-                                </div>
-                              </div>
+                          <div className='flex items-start justify-between mt-3'>
+                            <div>
+                          <span
+                            className='mr-4 leading-none text-xs text-gray-500'>{licenseCount?.assigned} out of {licenseCount?.count} seats assigned</span>
                             </div>
-                            <div
-                              className={`items-center ${licenseTotalHasChanged ? "border-b-2 py-4" : "pt-4"} text-right`}>
-                              <Price price={subscription.plan?.currencies[0].price} count={licenseCount.count}
-                                     interval={subscription.plan?.interval} label="Current total"/>
-                            </div>
-                            {licenseTotalHasChanged ? (
-                              <div className='items-center py-4 text-right'>
-                                <Price price={subscription.plan.currencies?.[0].price} count={updatedLicenseCount}
-                                       interval={subscription.plan.interval} label="New total"/>
-                              </div>
-                            ) : null}
-                          </>
-                        ) : null}
+                          </div>
 
-                        {licenseTotalHasChanged ? (
-                          <div className='flex justify-end'>
+
+                          <div className='mt-3 flex justify-between'>
                             <button
-                              className={`w-full p-4 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                              className={`p-4 text-white rounded-md leading-none bg-blue-700`}
                               onClick={async () => {
-                                if (updatedLicenseCount && licenseCount) {
-                                  if (updatedLicenseCount > licenseCount.count) {
-                                    await addSeats(updatedLicenseCount - licenseCount.count)
-                                  }
-                                  if (updatedLicenseCount < licenseCount.count) {
-                                    await removeSeats(licenseCount.count - updatedLicenseCount)
-                                  }
-                                }
+                                await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
                               }}
                               disabled={disableButton}>
-                              Update subscription
+                              {disableButton ? (
+                                <div className='w-[20px]'><LoadingSpinner fill="white"/></div>
+                              ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}
+                            </button>
+
+                            <button
+                              className={`p-4 text-blue-700 rounded-md leading-none border-blue-700 border-2`}
+                              onClick={async () => {
+                                await cancelSubscription()
+                              }}
+                              disabled={disableButton}>
+                              {disableButton ? (
+                                <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
+                              ) : "Cancel subscription"}
                             </button>
                           </div>
-                        ) : null}
+
+                          {users?.filter((u) => !u.username && u.email)?.length ? (
+                            <div className='mt-6'>
+                              <h2 className='text-2xl font-bold text-gray-900 mr-4 mb-6'>Pending invites</h2>
+
+                              <div className='flex flex-col rounded-md shadow bg-white'>
+                                {users.filter((u) => !u.username && u.email).map((u, i) => {
+                                  const licenseUuid = licenses?.data.find((l) => l.granteeId === u.uuid)?.uuid
+                                  return (
+                                    <div className='p-3 bg-white border-b-2 flex justify-between items-center'>
+                                      {u.email}
+                                      <button
+                                        className='p-2 border-2 rounded-md text-gray-500 text-xs'
+                                        onClick={async () => {
+                                          try {
+                                            const res = await fetch(`/api/tokens?email=${u.email}`)
+                                            const data = await res.json()
+                                            if (res.ok) {
+                                              const link = `${process.env.NEXT_PUBLIC_APP_BASE_URL}/accept-invite?token=${data.value}${licenseUuid ? "&licenseUuid=" + licenseUuid : ""}`
+                                              await navigator.clipboard.writeText(link);
+                                            }
+                                          } catch (e) {
+                                            console.log(e)
+                                          }
+                                        }}
+                                      >
+                                        Copy invite link
+                                      </button>
+                                    </div>
+                                  )
+                                })}
+                              </div>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        <div>
+                          <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
+                            <div className='text-xl text-center mb-2'>Update seat count</div>
+                            <div className='mb-2 text-center'>To change the seat count you will need to update your
+                              subscription
+                              which will incur a change to your billing.
+                            </div>
+                            <div className='border-b-2 flex justify-center items-center pb-4'>
+                              {updatedLicenseCount && (
+                                <>
+                                  <button
+                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                    onClick={() => {
+                                      if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount - 1);
+                                    }}>
+                                    -
+                                  </button>
+                                  <div className='px-4 text-xl'>
+                                    <span>{updatedLicenseCount}</span>
+                                  </div>
+                                  <button
+                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                    onClick={() => {
+                                      if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount + 1);
+                                    }}>
+                                    +
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                            {subscription && updatedLicenseCount && licenseCount ? (
+                              <>
+                                <div className='border-b-2 flex justify-between items-end py-4'>
+                                  <div>
+                                    <div className='text-gray-500'>Current Plan</div>
+                                    <div className='text-xl'>{subscription?.plan?.displayName}</div>
+                                  </div>
+                                  <div>
+                                    <div className='text-xl'>£{subscription?.plan?.currencies?.[0].price / 100}
+                                      <span className='ml-1 text-sm'>seat / {subscription?.plan?.interval}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div
+                                  className={`items-center ${licenseTotalHasChanged ? "border-b-2 py-4" : "pt-4"} text-right`}>
+                                  <Price price={subscription.plan?.currencies[0].price} count={licenseCount.count}
+                                         interval={subscription.plan?.interval} label="Current total"/>
+                                </div>
+                                {licenseTotalHasChanged ? (
+                                  <div className='items-center py-4 text-right'>
+                                    <Price price={subscription.plan.currencies?.[0].price} count={updatedLicenseCount}
+                                           interval={subscription.plan.interval} label="New total"/>
+                                  </div>
+                                ) : null}
+                              </>
+                            ) : null}
+
+                            {licenseTotalHasChanged ? (
+                              <div className='flex justify-end'>
+                                <button
+                                  className={`w-full p-4 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                  onClick={async () => {
+                                    if (updatedLicenseCount && licenseCount) {
+                                      if (updatedLicenseCount > licenseCount.count) {
+                                        await addSeats(updatedLicenseCount - licenseCount.count)
+                                      }
+                                      if (updatedLicenseCount < licenseCount.count) {
+                                        await removeSeats(licenseCount.count - updatedLicenseCount)
+                                      }
+                                    }
+                                  }}
+                                  disabled={disableButton}>
+                                  Update subscription
+                                </button>
+                              </div>
+                            ) : null}
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
+                    </>
+                  ) : null}
                 </>
               ) : null}
             </div>

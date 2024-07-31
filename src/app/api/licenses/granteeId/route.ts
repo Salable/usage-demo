@@ -1,26 +1,21 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
-import {cookies} from "next/headers";
 import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+import {cookies} from "next/headers";
 
 export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
-    const productUuid = req.nextUrl.searchParams.get('productUuid')
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/check?granteeIds=${session.uuid}&productUuid=${productUuid}`, {
-      headers: { 'x-api-key': env.SALABLE_API_KEY },
+    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/granteeId/${session.uuid}`, {
+      headers: {
+        'x-api-key': env.SALABLE_API_KEY,
+        version: 'v2'
+      },
       cache: "no-store"
     })
-    const headers = new Headers(res.headers)
-    const headersMap = new Map(headers)
-    if (headersMap.get('content-type') === 'text/plain') {
-      return NextResponse.json(
-        { status: res.status }
-      );
-    }
     const data = await res.json()
     return NextResponse.json(
       data, { status: res.status }
