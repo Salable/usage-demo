@@ -1,39 +1,29 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
-import {randomUUID} from "crypto";
+import {randomBytes, randomUUID} from "crypto";
 import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {cookies} from "next/headers";
 
-
-export async function GET(req: NextRequest) {
+export async function POST(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/usage?planUuid=${process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID}&granteeId=${session?.uuid}`, {
-      headers: {
-        'x-api-key': env.SALABLE_API_KEY,
-        version: 'v2',
-      },
-      cache: "no-store",
-    })
-    const data = await res.json()
-    return NextResponse.json(
-      data,{ status: res.status }
-    );
-  } catch (e) {
-    const error = e as Error
-    console.log(error)
-    return NextResponse.json(
-      { error: error.message },
-      { status: 400 }
-    );
-  }
-}
+    const body = await req.json() as {bytes: 16 | 32 | 64}
+    const randomString = randomBytes(body.bytes).toString('hex');
 
-export async function PUT(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
-  try {
-    const body = await req.json() as UpdateUsageBody
+    let increment: number
+    switch (body.bytes) {
+      case 16 :
+        increment = 1
+        break
+      case 32 :
+        increment = 2
+        break
+      case 64 :
+        increment = 3
+        break
+      default: throw Error("Unknown bytes int")
+    }
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/usage`, {
       method: "PUT",
@@ -46,13 +36,14 @@ export async function PUT(req: NextRequest) {
         planUuid: process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID,
         granteeId: session.uuid,
         countOptions: {
-          increment: body.increment
+          increment
         }
       }),
       cache: "no-store",
     })
+
     return NextResponse.json(
-      { status: res.status }
+      {randomString, credits: increment}, { status: res.status }
     );
   } catch (e) {
     const error = e as Error
@@ -62,8 +53,4 @@ export async function PUT(req: NextRequest) {
       { status: 400 }
     );
   }
-}
-
-export type UpdateUsageBody = {
-  increment: number;
 }

@@ -1,8 +1,6 @@
 'use client'
 import React, {useEffect, useState} from "react";
 import LoadingSpinner from "@/components/loading-spinner";
-import {toast, ToastContainer} from 'react-toastify';
-import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import Head from "next/head";
 import useSWR from "swr";
@@ -46,7 +44,6 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
       <Head><title>Salable Seats Demo</title></Head>
       <main>
         <div className="w-full font-sans text-sm">
-          <ToastContainer />
           <Main uuid={params.uuid} />
         </div>
       </main>
@@ -63,6 +60,7 @@ const Main = ({uuid}: {uuid: string}) => {
   const [disableButton, setDisableButton] = useState(false)
   const [updatedLicenseCount, setUpdatedLicenseCount] = useState<number | null>(null)
   const [isCancellingSubscription, setIsCancellingSubscription] = useState<boolean>(false)
+  const [isChangingSubscription, setIsChangingSubscription] = useState<boolean>(false)
   const [changingPlanUuid, setChangingPlanUuid] = useState<string | null>(null)
 
   const {data: session, isLoading, isValidating} = useSWR<Session>(`/api/session`)
@@ -70,16 +68,17 @@ const Main = ({uuid}: {uuid: string}) => {
   const {data: subscription, mutate: mutateSubscription } = useSWR<SalableSubscription>(`/api/subscriptions/${uuid}`)
   const {data: licenses, mutate: mutateLicenses, isLoading: isLoadingLicenses, isValidating: isValidatingLicenses} = useSWR<GetAllLicensesResponse>(`/api/licenses?subscriptionUuid=${uuid}${subscription?.status !== 'CANCELED' ? "&status=active" : ""}`)
   const {data: licenseCount, mutate: mutateLicenseCount, isLoading: isLoadingLicenseCount,  isValidating: isValidatingLicenseCount} = useSWR<GetLicensesCountResponse>(`/api/licenses/count?subscriptionUuid=${uuid}&status=active`)
-  const {data: licensesForGranteeId, isLoading: isLoadingLicensesForGranteeId, isValidating: isValidatingLicensesForGranteeId} = useSWR<License[]>(`/api/licenses/granteeId`)
-  const usageLicenses = licensesForGranteeId?.filter((l) => l.productUuid === process.env.NEXT_PUBLIC_USAGE_PRODUCT_UUID && l.status !== 'CANCELED' )
-  const basicUsageLicense = usageLicenses?.find((l) => l.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_USAGE_PLAN_UUID)
-  const {data: usageOnLicense, isLoading: isLoadingUsageOnLicense, isValidating: isValidatingUsageOnLicense} = useSWR<{unitCount: number; updatedAt: string}>(`/api/licenses/${basicUsageLicense?.uuid}/usage`)
+  const {data: usageOnLicense} = useSWR<{unitCount: number; updatedAt: string}>(`/api/usage`)
+
+  const daysLeftInCycle = subscription ? Math.floor(Math.abs(new Date(subscription.expiryDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)) : null;
+
   const date = usageOnLicense?.updatedAt ? new Date(new Date(usageOnLicense.updatedAt)).toLocaleString([], {
     day: "numeric",
     month: "short",
     year: "2-digit",
     hour: '2-digit',
-    minute:'2-digit'
+    minute:'2-digit',
+    second: "2-digit"
   }) : ''
 
   const licenseTotalHasChanged = updatedLicenseCount && licenseCount?.count !== updatedLicenseCount
@@ -126,7 +125,6 @@ const Main = ({uuid}: {uuid: string}) => {
         setIsPolling(true)
       }
       if (data.error) {
-        toast.error(data.error)
         setDisableButton(false)
         if (licenseCount?.count) setUpdatedLicenseCount(licenseCount?.count)
       }
@@ -138,13 +136,12 @@ const Main = ({uuid}: {uuid: string}) => {
 
   const cancelSubscription = async () => {
     try {
-      setDisableButton(true)
+      setIsCancellingSubscription(true)
       const cancel = await fetch(`/api/subscriptions/${uuid}`, {
         method: 'DELETE',
       })
       if (cancel.ok) {
         setIsPolling(true)
-        setIsCancellingSubscription(true)
         await mutateSubscription()
         await mutateLicenseCount()
         await mutateLicenses()
@@ -158,14 +155,16 @@ const Main = ({uuid}: {uuid: string}) => {
 
   const changeSubscription = async (planUuid: string) => {
     try {
-      setDisableButton(true)
+      setIsChangingSubscription(true)
       const change = await fetch(`/api/subscriptions/${uuid}/change`, {
         method: 'PUT',
-        body: JSON.stringify({planUuid})
+        body: JSON.stringify({planUuid: planUuid})
       })
       if (change.ok) {
         setIsPolling(true)
         setChangingPlanUuid(planUuid)
+      } else {
+        setDisableButton(false)
       }
     } catch (e) {
       setDisableButton(false)
@@ -192,11 +191,6 @@ const Main = ({uuid}: {uuid: string}) => {
               await mutateLicenseCount()
               setSalableEventUuid(null)
               setDisableButton(false)
-              if (event.status === 'success') {
-                toast.success("Subscription successfully updated")
-              } else {
-                toast.error("Subscription failed to update")
-              }
             }
           }
         }, 500);
@@ -219,7 +213,7 @@ const Main = ({uuid}: {uuid: string}) => {
           }
         }, 500);
       }
-      if (changingPlanUuid) {
+      if (isChangingSubscription) {
         const subscriptionPolling = setInterval(async () => {
           try {
             const subRes = await fetch(`/api/subscriptions/${uuid}`)
@@ -232,6 +226,7 @@ const Main = ({uuid}: {uuid: string}) => {
               await mutateLicenseCount()
               setDisableButton(false)
               setChangingPlanUuid(null)
+              setIsChangingSubscription(false)
             }
           } catch (e) {
             console.log(e)
@@ -269,34 +264,25 @@ const Main = ({uuid}: {uuid: string}) => {
                       </div>
                     </div>
                   ) : null}
-                  {subscription?.status !== 'CANCELED' ? (
+                  {subscription?.status !== 'CANCELED' && usageOnLicense?.unitCount !== undefined ? (
                     <>
                       <div className='flex justify-between items-center'>
                         <div className='mb-6'>
-                          <h2 className='text-2xl font-bold text-gray-900 mr-4'>Usage: {usageOnLicense?.unitCount}</h2>
+                          <span className='text-2xl font-bold text-gray-900 mr-4'>£{usageOnLicense?.unitCount / 100}
+                            <span className='text-xs text-gray-500 font-normal'> credits spent</span>
+                          </span>
                           <div className='text-gray-500'>Last updated at {date.toString()}</div>
                         </div>
                       </div>
                       <div>
                         <div className='mt-3 flex justify-between'>
-                          {/*<button*/}
-                          {/*  className={`p-4 text-white rounded-md leading-none bg-blue-700`}*/}
-                          {/*  onClick={async () => {*/}
-                          {/*    await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)*/}
-                          {/*  }}*/}
-                          {/*  disabled={disableButton}>*/}
-                          {/*  {disableButton ? (*/}
-                          {/*    <div className='w-[20px]'><LoadingSpinner fill="white"/></div>*/}
-                          {/*  ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}*/}
-                          {/*</button>*/}
-
                           <button
                             className={`p-4 text-blue-700 rounded-md leading-none border-blue-700 border-2`}
                             onClick={async () => {
                               await cancelSubscription()
                             }}
-                            disabled={disableButton}>
-                            {disableButton ? (
+                            disabled={isCancellingSubscription}>
+                            {isCancellingSubscription ? (
                               <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
                             ) : "Cancel subscription"}
                           </button>
@@ -369,8 +355,8 @@ const Main = ({uuid}: {uuid: string}) => {
                               onClick={async () => {
                                 await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
                               }}
-                              disabled={disableButton}>
-                              {disableButton ? (
+                              disabled={isChangingSubscription}>
+                              {isChangingSubscription ? (
                                 <div className='w-[20px]'><LoadingSpinner fill="white"/></div>
                               ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}
                             </button>
@@ -535,9 +521,4 @@ const Price = ({price, count, interval, label}: { price: number, count: number, 
       </div>
     </>
   )
-}
-
-type SalableRequest = {
-  status: string;
-  type: string
 }

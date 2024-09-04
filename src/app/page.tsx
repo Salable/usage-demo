@@ -118,9 +118,9 @@ const Main = () => {
                   <div className='mb-4'>
                     <div className='flex items-end mb-1'>
                       <div className='text-3xl mr-2'>
-                        <span className='font-bold'>£4</span>
+                        <span className='font-bold'>£2</span>
                         <span className='text-xl'> / per seat</span>
-                        <span className='text-sm ml-1'>(min 3 seats)</span>
+                        <span className='text-sm ml-1'>(min 4 seats)</span>
                       </div>
                     </div>
                     <div className='text-xs'>per month</div>
@@ -145,7 +145,7 @@ const Main = () => {
                   <div>
                     {!isLoadingSession && !session?.uuid ? (
                       <Link
-                        href={"/sign-up?planUuid=" + process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID}
+                        href={"/sign-up?planUuid=" + process.env.NEXT_PUBLIC_SALABLE_PLAN_UUID}
                         className='block p-4 text-white rounded-md leading-none bg-blue-700 w-full text-center'
                       >
                         Sign up
@@ -163,7 +163,7 @@ const Main = () => {
                                 successUrl: process.env.NEXT_PUBLIC_APP_BASE_URL as string,
                                 cancelUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/cancel`,
                               })
-                              const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID}/checkoutlink?${params.toString()}`, {
+                              const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID}/checkoutlink?${params.toString()}`, {
                                 headers: {'x-api-key': process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ as string}
                               })
                               const data = await urlFetch.json()
