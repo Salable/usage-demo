@@ -65,8 +65,6 @@ export async function POST(req: NextRequest) {
       organisationUuid: existingOrganisationsResult[0].uuid,
     }).returning();
 
-
-
     const token = randomBytes(32).toString('hex')
     const tokenDB = await db.insert(tokensTable).values({
       uuid: randomUUID(),

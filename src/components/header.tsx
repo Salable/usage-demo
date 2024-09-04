@@ -40,12 +40,13 @@ export const Header = () => {
                   <span>{user?.username?.[0].toUpperCase()}</span>
                 </div>
                 {dropDownOpen && (
-                  <div className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow'>
+                  <div className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow z-10'>
                     <div className='p-3 block f-full border-b text-sm text-center'>Hello, {user.username}</div>
                     {subscriptions?.data.length ?
                       <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/subscriptions'}>Subscriptions</Link> : null }
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/organisations'}>Organisations</Link>
                     <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/'}>Capabilities</Link>
+                    <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/usage'}>Usage</Link>
                     <button className='p-3 block f-full text-right hover:bg-gray-50 text-sm' onClick={async () => {
                       try {
                         setLoggingOut(true)

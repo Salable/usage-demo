@@ -7,32 +7,7 @@ import Head from "next/head";
 import useSWR from "swr";
 import {useRouter} from "next/navigation";
 import {GetAllSubscriptionsResponse} from "@/app/api/subscriptions/route";
-
-export type User = {
-  uuid: string;
-  username: string;
-  email: string;
-}
-export type GetLicensesCountResponse = {
-  assigned: number;
-  unassigned: number;
-  count: number;
-}
-export type GetAllLicensesResponse = {
-  first: string;
-  last: string;
-  data: License[]
-}
-export type License = {
-  uuid: string;
-  startTime: string;
-  granteeId: string;
-}
-export type Session = {
-  uuid: string;
-  organisationUuid: string;
-  email: string;
-}
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 export default function SubscriptionsView() {
   return (
@@ -69,7 +44,8 @@ const Main = () => {
               <div className='bg-white mb-3 flex justify-between items-center shadow rounded-sm p-3'>
                 <div className='flex items-center'>
                   <div className='text-lg mr-2'>{subscription.plan.displayName}</div>
-                  <span className='text-sm'>({subscription.quantity} seat{Number(subscription.quantity) > 1 ? "s" : ""})</span>
+                  {subscription.plan.licenseType === 'perSeat' ? <span
+                    className='text-sm'>({subscription.quantity} seat{Number(subscription.quantity) > 1 ? "s" : ""})</span> : null}
                 </div>
                 <div>
                   {subscription.status === 'CANCELED' ? <span
