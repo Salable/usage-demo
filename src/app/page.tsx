@@ -10,6 +10,7 @@ import Link from "next/link";
 import useSWR from "swr";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {CrossIcon} from "@/components/icons/cross-icon";
+import {PlanButton} from "@/components/plan-button";
 
 export type LicenseCheckResponse = {
   capabilities: string[],
@@ -35,10 +36,8 @@ export default function Home() {
 }
 
 const Main = () => {
-  const router = useRouter()
   const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
   const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check?productUuid=${process.env.NEXT_PUBLIC_PRODUCT_UUID}`)
-
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
@@ -84,31 +83,7 @@ const Main = () => {
                         Sign up
                       </Link>
                     ) : (
-                      <button
-                        className={`p-4 text-white rounded-md leading-none bg-blue-700 w-full`}
-                        onClick={async () => {
-                          if (session) {
-                            try {
-                              const params = new URLSearchParams({
-                                customerEmail: session.email,
-                                granteeId: session.uuid,
-                                member: session.email,
-                                successUrl: process.env.NEXT_PUBLIC_APP_BASE_URL as string,
-                                cancelUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/cancel`,
-                              })
-                              const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID}/checkoutlink?${params.toString()}`, {
-                                headers: {'x-api-key': process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ as string}
-                              })
-                              const data = await urlFetch.json()
-                              router.push(data.checkoutUrl)
-                            } catch (e) {
-                              console.log(e)
-                            }
-                          }
-                        }}
-                      >
-                        Purchase team plan
-                      </button>
+                      <PlanButton uuid={process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string} />
                     )}
                   </div>
                 </div>
@@ -151,31 +126,7 @@ const Main = () => {
                         Sign up
                       </Link>
                     ) : (
-                      <button
-                        className={`p-4 text-white rounded-md leading-none bg-blue-700 w-full`}
-                        onClick={async () => {
-                          if (session) {
-                            try {
-                              const params = new URLSearchParams({
-                                customerEmail: session.email,
-                                granteeId: session.uuid,
-                                member: session.email,
-                                successUrl: process.env.NEXT_PUBLIC_APP_BASE_URL as string,
-                                cancelUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/cancel`,
-                              })
-                              const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID}/checkoutlink?${params.toString()}`, {
-                                headers: {'x-api-key': process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ as string}
-                              })
-                              const data = await urlFetch.json()
-                              router.push(data.checkoutUrl)
-                            } catch (e) {
-                              console.log(e)
-                            }
-                          }
-                        }}
-                      >
-                        Purchase team plan
-                      </button>
+                      <PlanButton uuid={process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string} />
                     )}
                   </div>
                 </div>

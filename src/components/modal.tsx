@@ -14,25 +14,6 @@ import {
 type ModalFormValues = {
   email: string;
 };
-const resolver: Resolver<ModalFormValues> = async (values) => {
-  const errors = () => {
-    const obj: Record<string, {
-      type: string;
-      message: string;
-    }> = {}
-    if (!values.email) {
-      obj.email = {
-        type: 'required',
-        message: 'Email is required.',
-      }
-    }
-    return obj
-  }
-  return {
-    values: values ?? {},
-    errors: errors(),
-  };
-};
 
 export const Modal = () => {
   const router = useRouter()
@@ -40,7 +21,7 @@ export const Modal = () => {
   const pathname = usePathname()
   const licenseUuid = searchParams.get("licenseUuid")
   const subscriptionUuid = searchParams.get("subscriptionUuid")
-  const { register, setError, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<ModalFormValues>({ resolver });
+  const { register, setError, handleSubmit, formState: { errors, isSubmitting, isSubmitSuccessful } } = useForm<ModalFormValues>();
   const ref = useRef(null)
   const removeQueryParams = () => {
     const params = new URLSearchParams(searchParams.toString())
@@ -100,13 +81,28 @@ export const Modal = () => {
         </div>
         <form onSubmit={onSubmit} className='grid gap-3'>
           <fieldset>
-            <input type="email" className='p-3 w-full border-2' {...register("email")} placeholder="email" />
+            <input
+              type="email"
+              className='p-3 w-full border-2'
+              {...register("email", {
+                pattern: {
+                  value: /\S+@\S+\.\S+/,
+                  message: "Please enter a valid email address",
+                },
+                required: {
+                  value: true,
+                  message: 'Email is required'
+                },
+              })}
+              placeholder="Email"
+            />
             {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
           </fieldset>
 
           <div>
-            <button className={`p-4 text-white rounded-md leading-none bg-blue-700`}>{!isSubmitting ? "Invite user" :
-              <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}</button>
+            <button className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center`}>
+              {isSubmitting ? <div className='w-[15px] mr-2'><LoadingSpinner fill="white"/></div> : ''} Send invite
+            </button>
           </div>
           {errors.root?.serverError ? (
             <div className='bg-red-500 text-white p-2 rounded-sm'>

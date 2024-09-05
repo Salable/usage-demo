@@ -11,6 +11,8 @@ import {useOnClickOutside} from "usehooks-ts";
 import {Resolver, useForm} from "react-hook-form";
 import {pbkdf2Sync, randomBytes} from "crypto";
 import {useRouter} from "next/navigation";
+import useSWR from "swr";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 
 
@@ -34,34 +36,9 @@ type FormValues = {
   password: string;
 };
 
-const resolver: Resolver<FormValues> = async (values) => {
-  const errors = () => {
-    const obj: Record<string, {
-      type: string;
-      message: string;
-    }> = {}
-    if (!values.username) {
-      obj.email = {
-        type: 'required',
-        message: 'Username is required.',
-      }
-    }
-    if (!values.password) {
-      obj.password = {
-        type: 'required',
-        message: 'Password is required.',
-      }
-    }
-    return obj
-  }
-  return {
-    values: values ?? {},
-    errors: errors(),
-  };
-};
-
 const Main = () => {
-  const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
+  const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>();
   const router = useRouter()
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -82,17 +59,30 @@ const Main = () => {
       console.log(e)
     }
   });
+  if (session?.uuid) {
+    router.push('/')
+  }
   return (
     <div className='max-w-[500px] m-auto'>
       <h1 className='text-3xl mb-4'>Sign In</h1>
       <form onSubmit={onSubmit} className='grid gap-3'>
         <fieldset>
-          <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+          <input className='p-3 w-full' {...register("username", {
+            required: {
+              value: true,
+              message: 'Username is required'
+            },
+          })} placeholder="Username"/>
           {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
         </fieldset>
 
         <fieldset>
-          <input type="password" className='p-3 w-full' {...register("password")} placeholder="Password"/>
+          <input type="password" className='p-3 w-full' {...register("password", {
+            required: {
+              value: true,
+              message: 'Password is required'
+            },
+          })} placeholder="Password"/>
           {errors.password && <p className='text-red-600'>{errors.password.message}</p>}
         </fieldset>
 
