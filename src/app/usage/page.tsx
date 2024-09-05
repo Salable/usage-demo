@@ -9,6 +9,7 @@ import useSWR from "swr";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {LicenseCheckResponse} from "@/app/page";
 import { useForm, SubmitHandler } from "react-hook-form"
+import {PlanButton} from "@/components/plan-button";
 
 export type Bytes = '16' | '32' | '64'
 
@@ -160,31 +161,7 @@ const Main = () => {
                         Sign up
                       </Link>
                     ) : (
-                      <button
-                        className={`p-4 text-white rounded-md leading-none bg-blue-700 w-full`}
-                        onClick={async () => {
-                          if (session) {
-                            try {
-                              const params = new URLSearchParams({
-                                customerEmail: session.email,
-                                granteeId: session.uuid,
-                                member: session.email,
-                                successUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/usage`,
-                                cancelUrl: `${process.env.NEXT_PUBLIC_APP_BASE_URL}/cancel`,
-                              })
-                              const urlFetch = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/plans/${process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID}/checkoutlink?${params.toString()}`, {
-                                headers: {'x-api-key': process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ as string}
-                              })
-                              const data = await urlFetch.json()
-                              router.push(data.checkoutUrl)
-                            } catch (e) {
-                              console.log(e)
-                            }
-                          }
-                        }}
-                      >
-                        Purchase plan
-                      </button>
+                      <PlanButton uuid={process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID as string} />
                     )}
                   </div>
                 </div>
