@@ -7,35 +7,39 @@ import {db} from "@/drizzle/drizzle";
 import {tokensTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
-
-type AcceptInviteRequestBody = {
-  token: string
-  username: string
-  email: string
-  password: string
-  licenseUuid?: string
-}
+import {z} from "zod";
 
 export const revalidate = 0
+
+const ZodAcceptInviteRequestBody = z.object({
+  token: z.string(),
+  username: z.string(),
+  email: z.string(),
+  password: z.string(),
+  licenseUuid: z.string().uuid(),
+});
+
+type AcceptInviteRequestBody = z.infer<typeof ZodAcceptInviteRequestBody>
 
 export async function POST(req: NextRequest) {
   try {
     const body: AcceptInviteRequestBody = await req.json()
+    const data = ZodAcceptInviteRequestBody.parse(body)
 
-    const tokensResult = await db.select().from(tokensTable).where(eq(tokensTable.value, body.token));
+    const tokensResult = await db.select().from(tokensTable).where(eq(tokensTable.value, data.token));
     if (tokensResult.length === 0) throw new Error("Token does not exist")
     const token = tokensResult[0]
 
-    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
+    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.username, data.username));
     if (existingUsersResult.length > 1) throw new Error("User already exists")
 
     const salt = randomBytes(16).toString('hex');
-    const hash = hashString(body.password, salt)
+    const hash = hashString(data.password, salt)
 
     const updateUser = await db.update(usersTable)
       .set({
-        username: body.username,
-        email: body.email,
+        username: data.username,
+        email: data.email,
         salt,
         hash
       })

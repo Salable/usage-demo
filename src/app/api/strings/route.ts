@@ -4,15 +4,23 @@ import {randomBytes, randomUUID} from "crypto";
 import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {cookies} from "next/headers";
+import {z} from "zod";
+
+const ZodCreateStringRequestBody = z.object({
+  bytes: z.union([z.literal(16), z.literal(32), z.literal(64)]),
+});
+
+type CreateStringRequestBody = z.infer<typeof ZodCreateStringRequestBody>
 
 export async function POST(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
-    const body = await req.json() as {bytes: 16 | 32 | 64}
+    const body: CreateStringRequestBody = await req.json()
+    const data = ZodCreateStringRequestBody.parse(body)
     const randomString = randomBytes(body.bytes).toString('hex');
 
     let increment: number
-    switch (body.bytes) {
+    switch (data.bytes) {
       case 16 :
         increment = 1
         break

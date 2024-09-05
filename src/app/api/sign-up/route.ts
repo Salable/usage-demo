@@ -7,41 +7,45 @@ import {db} from "@/drizzle/drizzle";
 import {organisationsTable, usersOrganisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
-
-type SignUpRequestBody = {
-  organisationName: string
-  username: string
-  email: string
-  password: string
-}
+import {z} from "zod";
 
 export const revalidate = 0
+
+const ZodSignUpRequestBody = z.object({
+  organisationName: z.string(),
+  username: z.string(),
+  email: z.string().email(),
+  password: z.string(),
+});
+
+type SignUpRequestBody = z.infer<typeof ZodSignUpRequestBody>
 
 export async function POST(req: NextRequest) {
   try {
     const body: SignUpRequestBody = await req.json()
+    const data = ZodSignUpRequestBody.parse(body);
 
-    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.name, body.organisationName))
+    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.name, data.organisationName))
     if (existingOrganisationsResult.length > 0) throw new Error("Organisation already exists")
 
-    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, body.email));
+    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, data.email));
     if (existingUserEmailResult.length > 0) throw new Error("User email already exists")
 
-    const existingUsernameResult = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
+    const existingUsernameResult = await db.select().from(usersTable).where(eq(usersTable.username, data.username));
     if (existingUsernameResult.length > 0) throw new Error("Username already exists")
 
     const salt = randomBytes(16).toString('hex');
-    const hash = hashString(body.password, salt)
+    const hash = hashString(data.password, salt)
 
     const createOrg = await db.insert(organisationsTable).values({
       uuid: randomUUID(),
-      name: body.organisationName}).returning();
+      name: data.organisationName}).returning();
     const organisation = createOrg[0]
 
     const createUser = await db.insert(usersTable).values({
       uuid: randomUUID(),
-      username: body.username,
-      email: body.email,
+      username: data.username,
+      email: data.email,
       salt,
       hash
     }).returning();

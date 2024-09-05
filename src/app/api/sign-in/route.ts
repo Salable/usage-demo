@@ -6,27 +6,23 @@ import {db} from "@/drizzle/drizzle";
 import {usersOrganisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+import {z} from "zod";
 
-type SignInRequestBody = {
-  username: string
-  password: string
-}
+const ZodSignInRequestBody = z.object({
+  username: z.string(),
+  password: z.string(),
+});
 
-export type DBUser = {
-  ID: number;
-  username: number
-  email: string;
-  salt: string;
-  hash: string
-}
+type SignInRequestBody = z.infer<typeof ZodSignInRequestBody>
 
 export const revalidate = 0
 
 export async function POST(req: NextRequest) {
   try {
     const body: SignInRequestBody = await req.json()
+    const data = ZodSignInRequestBody.parse(body)
 
-    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
+    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.username, data.username));
     if (existingUsersResult.length === 0) throw new Error("User not found")
     const user = existingUsersResult[0]
 
@@ -34,7 +30,7 @@ export async function POST(req: NextRequest) {
       throw new Error("Sign in failed")
     }
 
-    const validLogin = validateHash(body.password, user.salt, user.hash)
+    const validLogin = validateHash(data.password, user.salt, user.hash)
     if (!validLogin) throw new Error("Incorrect password")
 
     const existingUsersOrganisationsResult = await db.select().from(usersOrganisationsTable).where(eq(usersOrganisationsTable.userUuid, user.uuid));

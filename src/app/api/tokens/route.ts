@@ -4,12 +4,7 @@ import {db} from "@/drizzle/drizzle";
 import {organisationsTable, tokensTable, usersOrganisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {env} from "@/app/environment";
-
-type CreateTokenRequestBody = {
-  organisationUuid: string;
-  email: string;
-  licenseUuid?: string;
-}
+import {z} from "zod";
 
 export const revalidate = 0
 
@@ -43,20 +38,29 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const ZodCreateTokenRequestBody = z.object({
+  organisationUuid: z.string().uuid(),
+  email: z.string(),
+  licenseUuid: z.string().uuid(),
+});
+
+type CreateTokenRequestBody = z.infer<typeof ZodCreateTokenRequestBody>
+
 export async function POST(req: NextRequest) {
   try {
     const body: CreateTokenRequestBody = await req.json()
+    const data = ZodCreateTokenRequestBody.parse(body)
 
-    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.uuid, body.organisationUuid))
+    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.uuid, data.organisationUuid))
     if (existingOrganisationsResult.length === 0) throw new Error("Organisation does not exist")
 
-    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, body.email));
+    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, data.email));
     if (existingUserEmailResult.length > 0) throw new Error("User email already exists")
 
     const createUser = await db.insert(usersTable).values({
       uuid: randomUUID(),
       username: null,
-      email: body.email,
+      email: data.email,
       salt: null,
       hash: null,
     }).returning();
@@ -76,8 +80,8 @@ export async function POST(req: NextRequest) {
       userUuid: user.uuid
     }).returning();
 
-    if (body.licenseUuid) {
-      const updateLicense = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/${body.licenseUuid}`, {
+    if (data.licenseUuid) {
+      const updateLicense = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/${data.licenseUuid}`, {
         method: "PUT",
         headers: {
           'x-api-key': env.SALABLE_API_KEY,

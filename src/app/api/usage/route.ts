@@ -4,6 +4,7 @@ import {randomUUID} from "crypto";
 import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {cookies} from "next/headers";
+import {z} from "zod";
 
 
 export async function GET(req: NextRequest) {
@@ -30,10 +31,17 @@ export async function GET(req: NextRequest) {
   }
 }
 
+const ZodUpdateUsageRequestBody = z.object({
+  increment: z.number()
+});
+
+type UpdateUsageBody = z.infer<typeof ZodUpdateUsageRequestBody>
+
 export async function PUT(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
-    const body = await req.json() as UpdateUsageBody
+    const body: UpdateUsageBody = await req.json()
+    const data = ZodUpdateUsageRequestBody.parse(body)
 
     const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/usage`, {
       method: "PUT",
@@ -46,7 +54,7 @@ export async function PUT(req: NextRequest) {
         planUuid: process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID,
         granteeId: session.uuid,
         countOptions: {
-          increment: body.increment
+          increment: data.increment
         }
       }),
       cache: "no-store",
@@ -62,8 +70,4 @@ export async function PUT(req: NextRequest) {
       { status: 400 }
     );
   }
-}
-
-export type UpdateUsageBody = {
-  increment: number;
 }
