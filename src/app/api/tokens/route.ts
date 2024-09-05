@@ -50,6 +50,9 @@ export async function POST(req: NextRequest) {
     const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.uuid, body.organisationUuid))
     if (existingOrganisationsResult.length === 0) throw new Error("Organisation does not exist")
 
+    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, body.email));
+    if (existingUserEmailResult.length > 0) throw new Error("User email already exists")
+
     const createUser = await db.insert(usersTable).values({
       uuid: randomUUID(),
       username: null,

@@ -30,50 +30,12 @@ type FormValues = {
   password: string;
 };
 
-const resolver: Resolver<FormValues> = async (values) => {
-  const errors = () => {
-    const obj: Record<string, {
-      type: string;
-      message: string;
-    }> = {}
-    if (!values.organisationName) {
-      obj.organisationName = {
-        type: 'required',
-        message: 'Organisation name is required.',
-      }
-    }
-    if (!values.username) {
-      obj.username = {
-        type: 'required',
-        message: 'Username is required.',
-      }
-    }
-    if (!values.email) {
-      obj.email = {
-        type: 'required',
-        message: 'Email is required.',
-      }
-    }
-    if (!values.password) {
-      obj.password = {
-        type: 'required',
-        message: 'Password is required.',
-      }
-    }
-    return obj
-  }
-  return {
-    values: values ?? {},
-    errors: errors(),
-  };
-};
-
 const Main = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planUuid = searchParams.get('planUuid')
   const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
-  const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
+  const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>();
   const onSubmit = handleSubmit(async (data) => {
     try {
       const userResponse = await fetch('/api/sign-up', {
@@ -117,22 +79,46 @@ const Main = () => {
         <h1 className='text-3xl mb-4'>Sign up</h1>
         <form onSubmit={onSubmit} className='grid gap-3'>
           <fieldset>
-            <input className='p-3 w-full' {...register("organisationName")} placeholder="Organisation name"/>
+            <input className='p-3 w-full' {...register("organisationName", {
+              required: {
+                value: true,
+                message: 'Organisation name is required'
+              },
+            })} placeholder="Organisation name"/>
             {errors.organisationName && <p className='text-red-600'>{errors.organisationName.message}</p>}
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("email")} placeholder="Email"/>
+            <input className='p-3 w-full' {...register("email", {
+              pattern: {
+                value: /\S+@\S+\.\S+/,
+                message: "Please enter a valid email address",
+              },
+              required: {
+                value: true,
+                message: 'Email is required'
+              },
+            })} placeholder="Email"/>
             {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+            <input className='p-3 w-full' {...register("username", {
+              required: {
+                value: true,
+                message: 'Username is required'
+              },
+            })} placeholder="Username"/>
             {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
           </fieldset>
 
           <fieldset>
-            <input type="password" className='p-3 w-full' {...register("password")} placeholder="Password"/>
+            <input type="password" className='p-3 w-full' {...register("password", {
+              required: {
+                value: true,
+                message: 'Password is required'
+              },
+            })} placeholder="Password"/>
             {errors.password && <p className='text-red-600'>{errors.password.message}</p>}
           </fieldset>
 
