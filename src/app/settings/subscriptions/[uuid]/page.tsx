@@ -61,6 +61,7 @@ const Main = ({uuid}: {uuid: string}) => {
   const [updatedLicenseCount, setUpdatedLicenseCount] = useState<number | null>(null)
   const [isCancellingSubscription, setIsCancellingSubscription] = useState<boolean>(false)
   const [isChangingSubscription, setIsChangingSubscription] = useState<boolean>(false)
+  const [isChangingSeatCount, setIsChangingSeatCount] = useState<boolean>(false)
   const [changingPlanUuid, setChangingPlanUuid] = useState<string | null>(null)
 
   const {data: session, isLoading, isValidating} = useSWR<Session>(`/api/session`)
@@ -137,6 +138,7 @@ const Main = ({uuid}: {uuid: string}) => {
   const cancelSubscription = async () => {
     try {
       setIsCancellingSubscription(true)
+      setDisableButton(true)
       const cancel = await fetch(`/api/subscriptions/${uuid}`, {
         method: 'DELETE',
       })
@@ -149,6 +151,7 @@ const Main = ({uuid}: {uuid: string}) => {
         setDisableButton(false)
       }
     } catch (e) {
+      setDisableButton(false)
       console.log(e)
     }
   }
@@ -156,6 +159,7 @@ const Main = ({uuid}: {uuid: string}) => {
   const changeSubscription = async (planUuid: string) => {
     try {
       setIsChangingSubscription(true)
+      setDisableButton(true)
       const change = await fetch(`/api/subscriptions/${uuid}/change`, {
         method: 'PUT',
         body: JSON.stringify({planUuid: planUuid})
@@ -191,6 +195,7 @@ const Main = ({uuid}: {uuid: string}) => {
               await mutateLicenseCount()
               setSalableEventUuid(null)
               setDisableButton(false)
+              setIsChangingSeatCount(false)
             }
           }
         }, 500);
@@ -281,7 +286,7 @@ const Main = ({uuid}: {uuid: string}) => {
                             onClick={async () => {
                               await cancelSubscription()
                             }}
-                            disabled={isCancellingSubscription}>
+                            disabled={disableButton}>
                             {isCancellingSubscription ? (
                               <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
                             ) : "Cancel subscription"}
@@ -351,25 +356,23 @@ const Main = ({uuid}: {uuid: string}) => {
 
                           <div className='mt-3 flex justify-between'>
                             <button
-                              className={`p-4 text-white rounded-md leading-none bg-blue-700`}
+                              className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center`}
                               onClick={async () => {
                                 await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
                               }}
-                              disabled={isChangingSubscription}>
-                              {isChangingSubscription ? (
-                                <div className='w-[20px]'><LoadingSpinner fill="white"/></div>
-                              ) : `Change to ${subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"}`}
+                              disabled={disableButton}>
+                              {isChangingSubscription ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
+                              Change to {subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"} plan
                             </button>
 
                             <button
-                              className={`p-4 text-blue-700 rounded-md leading-none border-blue-700 border-2`}
+                              className={`p-4 rounded-md leading-none text-white bg-red-600 flex items-center`}
                               onClick={async () => {
                                 await cancelSubscription()
                               }}
                               disabled={disableButton}>
-                              {disableButton ? (
-                                <div className='w-[20px]'><LoadingSpinner fill="blue"/></div>
-                              ) : "Cancel subscription"}
+                              {isCancellingSubscription ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
+                              Cancel subscription
                             </button>
                           </div>
 
@@ -419,7 +422,7 @@ const Main = ({uuid}: {uuid: string}) => {
                               {updatedLicenseCount && (
                                 <>
                                   <button
-                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] bg-blue-700`}
                                     onClick={() => {
                                       if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount - 1);
                                     }}>
@@ -429,7 +432,7 @@ const Main = ({uuid}: {uuid: string}) => {
                                     <span>{updatedLicenseCount}</span>
                                   </div>
                                   <button
-                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                    className={`flex items-center justify-center leading-none text-xl p-3 text-white rounded-full h-[38px] w-[38px] bg-blue-700`}
                                     onClick={() => {
                                       if (updatedLicenseCount) setUpdatedLicenseCount(updatedLicenseCount + 1);
                                     }}>
@@ -468,9 +471,10 @@ const Main = ({uuid}: {uuid: string}) => {
                             {licenseTotalHasChanged ? (
                               <div className='flex justify-end'>
                                 <button
-                                  className={`w-full p-4 text-white rounded-md leading-none ${!disableButton ? "bg-blue-700" : "bg-gray-700"}`}
+                                  className={`w-full p-4 text-white rounded-md leading-none bg-blue-700 flex items-center justify-center`}
                                   onClick={async () => {
                                     if (updatedLicenseCount && licenseCount) {
+                                      setIsChangingSeatCount(true)
                                       if (updatedLicenseCount > licenseCount.count) {
                                         await addSeats(updatedLicenseCount - licenseCount.count)
                                       }
@@ -480,7 +484,7 @@ const Main = ({uuid}: {uuid: string}) => {
                                     }
                                   }}
                                   disabled={disableButton}>
-                                  Update subscription
+                                  {isChangingSeatCount ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''} Update subscription
                                 </button>
                               </div>
                             ) : null}
