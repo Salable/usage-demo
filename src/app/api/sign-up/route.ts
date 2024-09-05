@@ -21,11 +21,14 @@ export async function POST(req: NextRequest) {
   try {
     const body: SignUpRequestBody = await req.json()
 
-    const existingUsersResult = await db.select().from(usersTable).where(eq(usersTable.email, body.email));
-    if (existingUsersResult.length > 1) throw new Error("User already exists")
-
     const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.name, body.organisationName))
-    if (existingOrganisationsResult.length > 1) throw new Error("Organisation already exists")
+    if (existingOrganisationsResult.length > 0) throw new Error("Organisation already exists")
+
+    const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, body.email));
+    if (existingUserEmailResult.length > 0) throw new Error("User email already exists")
+
+    const existingUsernameResult = await db.select().from(usersTable).where(eq(usersTable.username, body.username));
+    if (existingUsernameResult.length > 0) throw new Error("Username already exists")
 
     const salt = randomBytes(16).toString('hex');
     const hash = hashString(body.password, salt)
@@ -34,6 +37,7 @@ export async function POST(req: NextRequest) {
       uuid: randomUUID(),
       name: body.organisationName}).returning();
     const organisation = createOrg[0]
+
     const createUser = await db.insert(usersTable).values({
       uuid: randomUUID(),
       username: body.username,

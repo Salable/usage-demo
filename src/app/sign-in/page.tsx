@@ -11,6 +11,8 @@ import {useOnClickOutside} from "usehooks-ts";
 import {Resolver, useForm} from "react-hook-form";
 import {pbkdf2Sync, randomBytes} from "crypto";
 import {useRouter} from "next/navigation";
+import useSWR from "swr";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 
 
@@ -61,6 +63,7 @@ const resolver: Resolver<FormValues> = async (values) => {
 };
 
 const Main = () => {
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
   const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
   const router = useRouter()
   const onSubmit = handleSubmit(async (data) => {
@@ -82,6 +85,9 @@ const Main = () => {
       console.log(e)
     }
   });
+  if (session?.uuid) {
+    router.push('/')
+  }
   return (
     <div className='max-w-[500px] m-auto'>
       <h1 className='text-3xl mb-4'>Sign In</h1>

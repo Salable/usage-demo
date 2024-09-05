@@ -5,6 +5,8 @@ import {Resolver, useForm} from "react-hook-form";
 import {useRouter, useSearchParams} from "next/navigation";
 import Link from "next/link";
 import LoadingSpinner from "@/components/loading-spinner";
+import useSWR from "swr";
+import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 
 export default function SignUp() {
   return (
@@ -70,6 +72,7 @@ const Main = () => {
   const router = useRouter()
   const searchParams = useSearchParams()
   const planUuid = searchParams.get('planUuid')
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
   const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>({ resolver });
   const onSubmit = handleSubmit(async (data) => {
     try {
@@ -100,10 +103,14 @@ const Main = () => {
         const data = await urlFetch.json()
         router.push(data.checkoutUrl)
       }
+      router.push('/')
     } catch (e) {
       console.log(e)
     }
   });
+  if (session?.uuid) {
+    router.push('/')
+  }
   return (
     <>
       <div className='max-w-[500px] m-auto'>
@@ -115,13 +122,13 @@ const Main = () => {
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
-            {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
+            <input className='p-3 w-full' {...register("email")} placeholder="Email"/>
+            {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
           </fieldset>
 
           <fieldset>
-            <input className='p-3 w-full' {...register("email")} placeholder="Email"/>
-            {errors.email && <p className='text-red-600'>{errors.email.message}</p>}
+            <input className='p-3 w-full' {...register("username")} placeholder="Username"/>
+            {errors.username && <p className='text-red-600'>{errors.username.message}</p>}
           </fieldset>
 
           <fieldset>
