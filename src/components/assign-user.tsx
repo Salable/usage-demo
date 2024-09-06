@@ -33,7 +33,7 @@ export const AssignUser = (
 
   return (
     <div className={`border-b-2`} ref={ref}>
-      <div className='p-4 flex justify-between'>
+      <div className='p-3 flex justify-between'>
         <div>
           <div className='flex items-center cursor-pointer' onClick={() => setShowUsers(!showUsers)}>
             <div className='rounded-full mr-3'>
@@ -82,9 +82,10 @@ export const AssignUser = (
         </div>
         <div className='flex items-center'>
           {isPending ? (
-            <div className='mb-1'><span className='p-1 bg-yellow-300 text-xs rounded-sm mr-2'>Pending</span></div>
+            <div className='mb-1'><span className='p-1 bg-yellow-300 text-xs rounded-sm mr-2 uppercase font-bold'>Pending</span></div>
           ) : null}
-          {assignedUser ? (
+          {assignedUser?.uuid === session?.uuid ? <div className='p-2 border-2 rounded-md text-gray-500 bg-gray-200 text-xs leading-none'>You</div> : null}
+          {assignedUser?.uuid && assignedUser?.uuid !== session?.uuid ? (
             <button className='p-2 border-2 rounded-md text-gray-500 text-xs'
               onClick={async () => {
                 try {
@@ -101,17 +102,18 @@ export const AssignUser = (
                   console.log(e)
                 }
               }}> Unassign user</button>
-          ) : (
+          ) : null}
+          {!assignedUser ? (
             <button className='p-2 border-2 rounded-md text-gray-500 text-xs'
-              onClick={async () => {
-                const params = new URLSearchParams(searchParams.toString())
-                params.set("modalOpen", "true")
-                params.set("licenseUuid", license.uuid)
-                params.set("subscriptionUuid", subscriptionUuid)
-                router.push(pathname + '?' + params.toString())
-              }}
+                    onClick={async () => {
+                      const params = new URLSearchParams(searchParams.toString())
+                      params.set("modalOpen", "true")
+                      params.set("licenseUuid", license.uuid)
+                      params.set("subscriptionUuid", subscriptionUuid)
+                      router.push(pathname + '?' + params.toString())
+                    }}
             > Invite user</button>
-          )}
+          ) : null}
         </div>
       </div>
     </div>

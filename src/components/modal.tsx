@@ -75,7 +75,7 @@ export const Modal = () => {
     <div
       className='bg-gray-500/[.6] p-10 fixed top-0 left-0 w-full h-full flex justify-center items-center'
     >
-      <div className='w-[500px] bg-white m-auto rounded-sm shadow p-6' ref={ref}>
+      <div className='w-[500px] bg-white m-auto shadow p-6 rounded-lg' ref={ref}>
         <div className='mb-4'>
           <p>Submit the email of the user you want to invite to the seat.</p>
         </div>

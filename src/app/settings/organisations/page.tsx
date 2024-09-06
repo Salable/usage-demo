@@ -44,21 +44,21 @@ const Main = () => {
     <>
       <div className='max-w-[1000px] m-auto'>
         {!organisationIsLoading && organisation ? <h1 className='text-3xl mb-4'>{organisation.name}</h1> : null}
-        <div className='mb-6'>
+        <div className='mb-6 bg-white shadow rounded-md'>
           {!isLoading && users?.length ? (
             <div>
               {users.map((user, i) => {
                 return (
-                  <div className='mb-1 p-2 bg-white rounded-sm shadow' key={user.uuid}>
+                  <div className='p-3 rounded-sm border-b-2' key={user.uuid}>
                     <div className='flex justify-between items-center'>
                       <p className='mr-2'>{user.username} <span className='text-gray-500 italic text-sm'>({user.email})</span></p>
-                      {user.uuid === session?.uuid ? <div className='p-2 border-2 rounded-md text-gray-500 bg-gray-200 text-xs'>You</div> : null}
+                      {user.uuid === session?.uuid ? <div className='p-2 border-2 rounded-md text-gray-500 bg-gray-200 text-xs leading-none'>You</div> : null}
                       {user.username && session && user.uuid !== session.uuid ? (
                         <DeleteUser userUuid={user.uuid} />
                       ) : null}
                       {!user.username && user.email ? (
                         <div>
-                          <span className='p-1 bg-yellow-300 text-xs rounded-sm mr-2'>Pending</span>
+                          <span className='p-1 bg-yellow-300 text-xs rounded-sm mr-2 uppercase font-bold'>Pending</span>
                           <button
                             className='p-2 border-2 rounded-md text-gray-500 text-xs'
                             onClick={async () => {

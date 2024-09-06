@@ -247,9 +247,6 @@ const Main = ({uuid}: {uuid: string}) => {
   return (
     <>
       <div className='max-w-[1000px] m-auto'>
-        <div className="mb-4 text-right">
-          <Link href="/settings/subscriptions" className='text-blue-700'>Back to subscriptions</Link>
-        </div>
         <div>
           <h1 className='text-3xl mb-6 flex items-center'>Subscription
             {subscription?.status === 'ACTIVE' ? <span className='px-2 ml-2 py-2 rounded-md leading-none bg-sky-200 text-sky-500 uppercase text-lg font-bold'>{subscription.plan.displayName}</span> : null}
@@ -348,32 +345,8 @@ const Main = ({uuid}: {uuid: string}) => {
                           </div>
                           <div className='flex items-start justify-between mt-3'>
                             <div>
-                          <span
-                            className='mr-4 leading-none text-xs text-gray-500'>{licenseCount?.assigned} out of {licenseCount?.count} seats assigned</span>
+                              <span className='mr-4 leading-none text-xs text-gray-500'>{licenseCount?.assigned} out of {licenseCount?.count} seats assigned</span>
                             </div>
-                          </div>
-
-
-                          <div className='mt-3 flex justify-between'>
-                            <button
-                              className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center`}
-                              onClick={async () => {
-                                await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
-                              }}
-                              disabled={disableButton}>
-                              {isChangingSubscription ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
-                              Change to {subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"} plan
-                            </button>
-
-                            <button
-                              className={`p-4 rounded-md leading-none text-white bg-red-600 flex items-center`}
-                              onClick={async () => {
-                                await cancelSubscription()
-                              }}
-                              disabled={disableButton}>
-                              {isCancellingSubscription ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
-                              Cancel subscription
-                            </button>
                           </div>
 
                           {users?.filter((u) => !u.username && u.email)?.length ? (
@@ -384,7 +357,7 @@ const Main = ({uuid}: {uuid: string}) => {
                                 {users.filter((u) => !u.username && u.email).map((u, i) => {
                                   const licenseUuid = licenses?.data.find((l) => l.granteeId === u.uuid)?.uuid
                                   return (
-                                    <div className='p-3 bg-white border-b-2 flex justify-between items-center'>
+                                    <div className='p-3 border-b-2 flex justify-between items-center'>
                                       {u.email}
                                       <button
                                         className='p-2 border-2 rounded-md text-gray-500 text-xs'
@@ -412,6 +385,17 @@ const Main = ({uuid}: {uuid: string}) => {
                         </div>
 
                         <div>
+                          <button
+                            className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center mb-6 w-full justify-center`}
+                            onClick={async () => {
+                              await changeSubscription(subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID as string : process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID as string)
+                            }}
+                            disabled={disableButton}>
+                            {isChangingSubscription ? (
+                              <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
+                            Change
+                            to {subscription?.planUuid === process.env.NEXT_PUBLIC_SALABLE_BASIC_PLAN_UUID ? "Pro" : "Basic"} plan
+                          </button>
                           <div className='flex flex-col rounded-md border-gray-300 border-2 p-4'>
                             <div className='text-xl text-center mb-2'>Update seat count</div>
                             <div className='mb-2 text-center'>To change the seat count you will need to update your
@@ -484,11 +468,23 @@ const Main = ({uuid}: {uuid: string}) => {
                                     }
                                   }}
                                   disabled={disableButton}>
-                                  {isChangingSeatCount ? (<div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''} Update subscription
+                                  {isChangingSeatCount ? (
+                                    <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''} Update
+                                  subscription
                                 </button>
                               </div>
                             ) : null}
                           </div>
+                          <button
+                            className={`p-4 mt-6 rounded-md leading-none text-white bg-red-600 flex items-center justify-center w-full`}
+                            onClick={async () => {
+                              await cancelSubscription()
+                            }}
+                            disabled={disableButton}>
+                            {isCancellingSubscription ? (
+                              <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>) : ''}
+                            Cancel subscription
+                          </button>
                         </div>
                       </div>
                     </>
