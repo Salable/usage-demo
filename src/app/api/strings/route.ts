@@ -5,16 +5,40 @@ import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {cookies} from "next/headers";
 import {z} from "zod";
+import {
+  appBaseUrl,
+  salableApiBaseUrl,
+  salableBasicUsagePlanUuid,
+  salableProUsagePlanUuid,
+  salableUsageProductUuid
+} from "@/app/constants";
 
 const ZodCreateStringRequestBody = z.object({
-  bytes: z.union([z.literal(16), z.literal(32), z.literal(64)]),
+  bytes: z.union([z.literal(16), z.literal(32), z.literal(64), z.literal(128)]),
 });
 
 type CreateStringRequestBody = z.infer<typeof ZodCreateStringRequestBody>
 
 export async function POST(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  console.log(session)
+
   try {
+    const checkRes = await fetch(`${salableApiBaseUrl}/licenses/check?granteeIds=${session.uuid}&productUuid=${salableUsageProductUuid}`, {
+      headers: { 'x-api-key': env.SALABLE_API_KEY },
+      cache: "no-store"
+    })
+    const headers = new Headers(checkRes.headers)
+    const headersMap = new Map(headers)
+    if (headersMap.get('content-type') === 'text/plain') {
+      return NextResponse.json(
+        { status: checkRes.status }
+      );
+    }
+    const checkData = await checkRes.json()
+
+    const planUuid = checkData.capabilitiesEndDates['128'] ? salableProUsagePlanUuid : salableBasicUsagePlanUuid
+
     const body: CreateStringRequestBody = await req.json()
     const data = ZodCreateStringRequestBody.parse(body)
     const randomString = randomBytes(body.bytes).toString('hex');
@@ -30,10 +54,15 @@ export async function POST(req: NextRequest) {
       case 64 :
         increment = 3
         break
-      default: throw Error("Unknown bytes int")
+      case 128 :
+        increment = 4
+        break
+      default: return NextResponse.json(
+        {error: 'Unknown bytes amount'}, { status: 500 }
+      );
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/usage`, {
+    const res = await fetch(`${salableApiBaseUrl}/usage`, {
       method: "PUT",
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
@@ -41,7 +70,7 @@ export async function POST(req: NextRequest) {
         'unique-key': randomUUID()
       },
       body: JSON.stringify({
-        planUuid: process.env.NEXT_PUBLIC_SALABLE_USAGE_PLAN_UUID,
+        planUuid,
         granteeId: session.uuid,
         countOptions: {
           increment

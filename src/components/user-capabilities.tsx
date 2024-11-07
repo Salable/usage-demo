@@ -1,3 +1,0 @@
-// const UserCapabilities = () => {
-//   return ()
-// }

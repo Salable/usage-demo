@@ -3,7 +3,7 @@ import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 import {validateHash} from "@/utils/validate-hash";
 import {db} from "@/drizzle/drizzle";
-import {usersOrganisationsTable, usersTable} from "@/drizzle/schema";
+import {usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {z} from "zod";
@@ -33,12 +33,8 @@ export async function POST(req: NextRequest) {
     const validLogin = validateHash(data.password, user.salt, user.hash)
     if (!validLogin) throw new Error("Incorrect password")
 
-    const existingUsersOrganisationsResult = await db.select().from(usersOrganisationsTable).where(eq(usersOrganisationsTable.userUuid, user.uuid));
-    const userOrg = existingUsersOrganisationsResult[0]
-
     const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
     session.uuid = user.uuid;
-    session.organisationUuid = userOrg.organisationUuid;
     if (user.email) session.email = user.email
     await session.save();
 

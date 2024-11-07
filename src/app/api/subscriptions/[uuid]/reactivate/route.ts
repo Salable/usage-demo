@@ -4,18 +4,23 @@ import {salableApiBaseUrl} from "@/app/constants";
 
 export const revalidate = 0
 
-export async function GET(req: NextRequest, { params }: { params: { uuid: string } }) {
+export async function PUT(req: NextRequest,  {params}: {params:{uuid: string}}) {
   try {
-    const res = await fetch(`${salableApiBaseUrl}/events/${params.uuid}`, {
+    const res = await fetch(`${salableApiBaseUrl}/subscriptions/${params.uuid}/reactivate`, {
+      method: 'put',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
         version: 'v2'
       },
-      cache: "no-store"
     })
-    const data = await res.json()
+    if (!res.ok) {
+      const data = await res.json()
+      return NextResponse.json(
+        { status: res.status, error: data }
+      );
+    }
     return NextResponse.json(
-      data, { status: res.status }
+      { status: res.status }
     );
   } catch (e) {
     const error = e as Error

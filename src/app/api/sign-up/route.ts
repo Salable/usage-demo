@@ -4,7 +4,7 @@ import {hashString} from "@/utils/hash-string";
 import {getIronSession} from "iron-session";
 import {cookies} from "next/headers";
 import {db} from "@/drizzle/drizzle";
-import {organisationsTable, usersOrganisationsTable, usersTable} from "@/drizzle/schema";
+import {usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
 import {z} from "zod";
@@ -12,7 +12,6 @@ import {z} from "zod";
 export const revalidate = 0
 
 const ZodSignUpRequestBody = z.object({
-  organisationName: z.string(),
   username: z.string(),
   email: z.string().email(),
   password: z.string(),
@@ -25,9 +24,6 @@ export async function POST(req: NextRequest) {
     const body: SignUpRequestBody = await req.json()
     const data = ZodSignUpRequestBody.parse(body);
 
-    const existingOrganisationsResult = await db.select().from(organisationsTable).where(eq(organisationsTable.name, data.organisationName))
-    if (existingOrganisationsResult.length > 0) throw new Error("Organisation already exists")
-
     const existingUserEmailResult = await db.select().from(usersTable).where(eq(usersTable.email, data.email));
     if (existingUserEmailResult.length > 0) throw new Error("User email already exists")
 
@@ -36,11 +32,6 @@ export async function POST(req: NextRequest) {
 
     const salt = randomBytes(16).toString('hex');
     const hash = hashString(data.password, salt)
-
-    const createOrg = await db.insert(organisationsTable).values({
-      uuid: randomUUID(),
-      name: data.organisationName}).returning();
-    const organisation = createOrg[0]
 
     const createUser = await db.insert(usersTable).values({
       uuid: randomUUID(),
@@ -51,15 +42,12 @@ export async function POST(req: NextRequest) {
     }).returning();
     const user = createUser[0]
 
-    await db.insert(usersOrganisationsTable).values({userUuid: user.uuid, organisationUuid: organisation.uuid});
-
     const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
     session.uuid = user.uuid;
-    session.organisationUuid = organisation.uuid
     if (user.email) session.email = user.email
     await session.save();
 
-    return NextResponse.json({uuid: user.uuid, email: user.email, organisationUuid: organisation.uuid},
+    return NextResponse.json({uuid: user.uuid, email: user.email},
       { status: 200 }
     );
   } catch (e) {

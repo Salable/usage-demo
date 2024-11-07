@@ -3,6 +3,7 @@ import {env} from "@/app/environment";
 import {cookies} from "next/headers";
 import {getIronSession} from "iron-session";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+import {salableApiBaseUrl} from "@/app/constants";
 
 export const revalidate = 0
 
@@ -10,7 +11,7 @@ export async function GET(req: NextRequest) {
   const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
   try {
     const productUuid = req.nextUrl.searchParams.get('productUuid')
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/check?granteeIds=${session.uuid}&productUuid=${productUuid}`, {
+    const res = await fetch(`${salableApiBaseUrl}/licenses/check?granteeIds=${session.uuid}&productUuid=${productUuid}`, {
       headers: { 'x-api-key': env.SALABLE_API_KEY },
       cache: "no-store"
     })
@@ -22,6 +23,7 @@ export async function GET(req: NextRequest) {
       );
     }
     const data = await res.json()
+    console.log('====== data', data)
     return NextResponse.json(
       data, { status: res.status }
     );

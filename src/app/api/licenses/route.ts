@@ -1,14 +1,21 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
+import {salableApiBaseUrl} from "@/app/constants";
 
 export const revalidate = 0
 
 export async function GET(req: NextRequest) {
   const subscriptionUuid = req.nextUrl.searchParams.get('subscriptionUuid')
-  let url = `${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses?status=active`
-  if (subscriptionUuid) url += `&subscriptionUuid=${subscriptionUuid}`;
+  const planUuid = req.nextUrl.searchParams.get('planUuid')
+  const granteeId = req.nextUrl.searchParams.get('granteeId')
+  const paramsObj: Record<string, string> = {status: 'active'}
+  if (subscriptionUuid) paramsObj.subscriptionUuid = subscriptionUuid;
+  if (planUuid) paramsObj.planUuid = planUuid;
+  if (granteeId) paramsObj.granteeId = granteeId;
+  const params = new URLSearchParams(paramsObj)
+
   try {
-    const res = await fetch(url, {
+    const res = await fetch(`${salableApiBaseUrl}/licenses?${params.toString()}`, {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
         version: 'v2',
@@ -31,7 +38,7 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses`, {
+    const res = await fetch(`${salableApiBaseUrl}/licenses`, {
       method: 'PUT',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,

@@ -8,6 +8,8 @@ import useSWR from "swr";
 import {useRouter} from "next/navigation";
 import {GetAllSubscriptionsResponse} from "@/app/api/subscriptions/route";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+import {PlanButton} from "@/components/plan-button";
+import {salableBasicUsagePlanUuid} from "@/app/constants";
 
 export default function SubscriptionsView() {
   return (
@@ -40,10 +42,10 @@ const Main = () => {
               if (a.status === 'CANCELED') return 1
               if (b.status === 'CANCELED') return -1
               return 0
-            }).map((subscription) => (
-              <div className='bg-white mb-3 flex justify-between items-center shadow rounded-sm p-3'>
+            }).map((subscription, index) => (
+              <div className='bg-white mb-3 flex justify-between items-center shadow rounded-sm p-3' key={`subscription-${index}`}>
                 <div className='flex items-center'>
-                  <div className='text-lg mr-2'>{subscription.plan.displayName}</div>
+                  <div className='text-lg mr-2 leading-none'>{subscription.plan.displayName}</div>
                   {subscription.plan.licenseType === 'perSeat' ? <span
                     className='text-sm'>({subscription.quantity} seat{Number(subscription.quantity) > 1 ? "s" : ""})</span> : null}
                 </div>
@@ -54,13 +56,39 @@ const Main = () => {
                 </div>
               </div>
             ))
-          ) : null}
+          ) : (
+            <div>
+              <p className='mb-3'>No subscriptions found. Subscribe to one of our plans to <Link href='/' className={'text-blue-500'}>get started!</Link></p>
+            </div>
+          )}
         </div>
       ) : (
-        <div className="ml-3 w-[20px]">
-          <LoadingSpinner/>
-        </div>
+        <LoadingSkeleton />
       )}
+    </div>
+  )
+}
+
+const LoadingSkeleton = () => {
+  return (
+    <div>
+      {[...new Array(4)].map(() => (
+        <div className="shadow rounded-sm p-4 w-full bg-white mx-auto mb-2">
+          <div className="animate-pulse flex w-full">
+            <div className="flex-1 space-y-6 py-1">
+              <div className="flex justify-between">
+                <div className='flex'>
+                  <div className="mr-2 h-2 bg-slate-300 rounded w-[100px]"></div>
+                </div>
+                <div className='flex'>
+                  <div className="mr-2 h-2 bg-slate-300 rounded w-[100px]"></div>
+                  <div className="h-2 bg-slate-300 rounded w-[50px]"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

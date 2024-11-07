@@ -3,12 +3,13 @@ import {db} from "@/drizzle/drizzle";
 import {organisationsTable, usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {env} from "@/app/environment";
+import {salableApiBaseUrl} from "@/app/constants";
 
 export const revalidate = 0
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses/granteeId/${params.id}`, {
+    const res = await fetch(`${salableApiBaseUrl}/licenses/granteeId/${params.id}`, {
       headers: {
         'x-api-key': env.SALABLE_API_KEY,
         version: 'v2'
@@ -18,7 +19,7 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
 
     if (res.status !== 204) {
       const licenses = await res.json() as {uuid: string, granteeId: string | null}[]
-      await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/licenses`, {
+      await fetch(`${salableApiBaseUrl}/licenses`, {
         method: 'PUT',
         headers: {
           'x-api-key': env.SALABLE_API_KEY,

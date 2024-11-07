@@ -1,12 +1,13 @@
 import {NextRequest, NextResponse} from "next/server";
 import {env} from "@/app/environment";
+import {salableApiBaseUrl} from "@/app/constants";
 
 export const revalidate = 0
 
 export async function PUT(req: NextRequest,  {params}: {params:{uuid: string}}) {
   try {
     const body = await req.json()
-    const res = await fetch(`${process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL}/subscriptions/${params.uuid}/change-plan`, {
+    const res = await fetch(`${salableApiBaseUrl}/subscriptions/${params.uuid}/change-plan`, {
       method: 'put',
       headers: {
         'x-api-key': env.SALABLE_API_KEY,

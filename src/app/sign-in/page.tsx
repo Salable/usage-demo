@@ -37,7 +37,7 @@ type FormValues = {
 };
 
 const Main = () => {
-  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession} = useSWR<Session>(`/api/session`)
+  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession, mutate} = useSWR<Session>(`/api/session`)
   const { register, setError, handleSubmit, formState: { errors, isSubmitting } } = useForm<FormValues>();
   const router = useRouter()
   const onSubmit = handleSubmit(async (data) => {
@@ -54,6 +54,7 @@ const Main = () => {
         })
         return
       }
+      await mutate()
       router.push('/')
     } catch (e) {
       console.log(e)
