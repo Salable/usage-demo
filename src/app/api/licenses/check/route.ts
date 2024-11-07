@@ -8,7 +8,7 @@ import {salableApiBaseUrl} from "@/app/constants";
 export const revalidate = 0
 
 export async function GET(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
   try {
     const productUuid = req.nextUrl.searchParams.get('productUuid')
     const res = await fetch(`${salableApiBaseUrl}/licenses/check?granteeIds=${session.uuid}&productUuid=${productUuid}`, {

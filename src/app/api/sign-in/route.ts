@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
     const validLogin = validateHash(data.password, user.salt, user.hash)
     if (!validLogin) throw new Error("Incorrect password")
 
-    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
     session.uuid = user.uuid;
     if (user.email) session.email = user.email
     await session.save();

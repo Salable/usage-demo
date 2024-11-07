@@ -1,6 +1,6 @@
 import {NextRequest, NextResponse} from "next/server";
 import {db} from "@/drizzle/drizzle";
-import {organisationsTable, usersTable} from "@/drizzle/schema";
+import {usersTable} from "@/drizzle/schema";
 import {eq} from "drizzle-orm";
 import {env} from "@/app/environment";
 import {salableApiBaseUrl} from "@/app/constants";

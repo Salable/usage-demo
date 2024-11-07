@@ -64,7 +64,7 @@ export type GetAllSubscriptionsResponse = {
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
     if (!session) {
       return NextResponse.json(
         {error: 'No session found'}, { status: 400 }

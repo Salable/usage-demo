@@ -9,7 +9,7 @@ import {salableApiBaseUrl, salableBasicUsagePlanUuid} from "@/app/constants";
 
 
 export async function GET(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
   try {
     const requestParams: Record<string, string | null> = {
       planUuid: req.nextUrl.searchParams.get('planUuid'),

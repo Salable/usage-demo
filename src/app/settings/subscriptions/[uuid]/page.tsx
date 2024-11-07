@@ -35,7 +35,7 @@ export type GetAllUsageRecordsResponse = {
     unitCount: number;
     type: string;
     recordedAt: string;
-    resetAt: string;
+    resetAt: string | null;
     createdAt: string;
     updatedAt: string,
   }[]
@@ -317,7 +317,7 @@ const Main = ({uuid}: {uuid: string}) => {
                           <div>
                             {record.type === 'current' ? (
                               <>
-                                {format(new Date(record.createdAt), "d LLL yyy")} - {format(new Date(record.resetAt), "d LLL yyy")}
+                                From {format(new Date(record.createdAt), "d LLL yyy")}
                               </>
                             ) : (
                               <>
@@ -326,7 +326,7 @@ const Main = ({uuid}: {uuid: string}) => {
                             )}
                           </div>
                           <div className='flex items-center'>
-                            {record.type === 'current' ? (
+                            {record.type !== 'recorded' ? (
                               <span
                                 className='mr-2 p-1 leading-none uppercase rounded-sm bg-green-100 text-green-700 text-xs font-bold'>{record.type}</span>
                             ) : null}

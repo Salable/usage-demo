@@ -9,7 +9,7 @@ import {salableApiBaseUrl, salableBasicUsagePlanUuid} from "@/app/constants";
 
 
 export async function GET(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
   try {
     const planUuid = req.nextUrl.searchParams.get('planUuid')
     const res = await fetch(`${salableApiBaseUrl}/usage/current?planUuid=${planUuid}&granteeId=${session?.uuid}`, {
@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
       },
       cache: "no-store",
     })
-    console.log(res.status)
+
     const data = await res.json()
     return NextResponse.json(
       data,{ status: res.status }
@@ -41,7 +41,7 @@ const ZodUpdateUsageRequestBody = z.object({
 type UpdateUsageBody = z.infer<typeof ZodUpdateUsageRequestBody>
 
 export async function PUT(req: NextRequest) {
-  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+  const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
   try {
     const body: UpdateUsageBody = await req.json()
     const data = ZodUpdateUsageRequestBody.parse(body)

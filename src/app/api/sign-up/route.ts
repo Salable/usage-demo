@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }).returning();
     const user = createUser[0]
 
-    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session" });
+    const session = await getIronSession<Session>(cookies(), { password: 'Q2cHasU797hca8iQ908vsLTdeXwK3BdY', cookieName: "salable-session-usage" });
     session.uuid = user.uuid;
     if (user.email) session.email = user.email
     await session.save();

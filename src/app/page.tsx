@@ -46,12 +46,14 @@ const Main = () => {
   const [isChangingSubscription, setIsChangingSubscription] = useState<boolean>(false)
   const [changingPlanUuid, setChangingPlanUuid] = useState<string | null>(null)
   const [disableButton, setDisableButton] = useState(false)
-  const searchParams = useSearchParams()
+
 
   const router = useRouter()
   const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession, mutate: mutateSession} = useSWR<Session>(`/api/session`)
   const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck, mutate: mutateLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check?productUuid=${salableUsageProductUuid}`)
-  const {data: currentUsage, isLoading: isLoadingCurrentUsage, isValidating: isValidatingCurrentUsage, mutate: mutateCurrentUsage} = useSWR<{unitCount: number; updatedAt: string}>(`/api/usage/current?granteeId=${session?.uuid}&planUuid=${licenseCheck?.capabilitiesEndDates?.['128'] ? salableProUsagePlanUuid : salableBasicUsagePlanUuid}`)
+  const {data: currentUsage, isLoading: isLoadingCurrentUsage, isValidating: isValidatingCurrentUsage, mutate: mutateCurrentUsage} = useSWR<{unitCount: number; updatedAt: string}>(`/api/usage/current?planUuid=${licenseCheck?.capabilitiesEndDates?.['128'] ? salableProUsagePlanUuid : salableBasicUsagePlanUuid}`)
+  console.log('licenseCheck', licenseCheck)
+  console.log('currentUsage', currentUsage)
 
   const upgradeToPro = async () => {
     try {
@@ -192,10 +194,6 @@ const Main = () => {
         ) : null}
       </div>
     )
-  }
-
-  if (!isLoadingSession && !isValidatingSession && !session) {
-    router.push("/")
   }
 
   return (
@@ -340,10 +338,33 @@ const Main = () => {
           </>
         ) : (
           <div className="w-[20px]">
-            <LoadingSpinner/>
+            <LoadingSpinner />
           </div>
         )}
       </div>
     </>
+  )
+}
+
+const LoadingSkeleton = () => {
+  return (
+    <div className='animate-pulse'>
+      <div className="animate-pulse items-center flex justify-center">
+        <div className="h-2 bg-slate-300 rounded w-[300px]"></div>
+      </div>
+
+      <div className='animate-pulse flex justify-center items-center mt-6'>
+        <div className="mr-2 h-2 bg-slate-300 rounded w-[40px]"></div>
+        {[...new Array(4)].map((_, i) => (
+          <div className="mr-2 h-[43px] w-[43px] bg-slate-300 rounded-md"></div>
+        ))}
+        <div className="mr-2 h-[43px] w-[84px] bg-slate-300 rounded-md"></div>
+      </div>
+
+      <div className='animate-pulse mt-6 flex flex-col justify-center items-center'>
+        <div className="h-2 mb-3 bg-slate-300 rounded w-[100px]"></div>
+        <div className="h-2 bg-slate-300 rounded w-[200px]"></div>
+      </div>
+    </div>
   )
 }

@@ -1,6 +1,5 @@
 'use client'
 import React from "react";
-import LoadingSpinner from "@/components/loading-spinner";
 import "react-toastify/dist/ReactToastify.css";
 import Link from "next/link";
 import Head from "next/head";
@@ -8,8 +7,6 @@ import useSWR from "swr";
 import {useRouter} from "next/navigation";
 import {GetAllSubscriptionsResponse} from "@/app/api/subscriptions/route";
 import {Session} from "@/app/settings/subscriptions/[uuid]/page";
-import {PlanButton} from "@/components/plan-button";
-import {salableBasicUsagePlanUuid} from "@/app/constants";
 
 export default function SubscriptionsView() {
   return (
