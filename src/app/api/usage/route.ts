@@ -15,6 +15,7 @@ export async function GET(req: NextRequest) {
       planUuid: req.nextUrl.searchParams.get('planUuid'),
       subscriptionUuid: req.nextUrl.searchParams.get('subscriptionUuid'),
       status: req.nextUrl.searchParams.get('status'),
+      sort: req.nextUrl.searchParams.get('sort'),
     }
     const paramsObj: Record<string, string> = {}
     for (const entry of Object.entries(requestParams)) {

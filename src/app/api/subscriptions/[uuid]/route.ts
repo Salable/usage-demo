@@ -34,6 +34,10 @@ export async function DELETE(req: NextRequest, { params } : {params: {uuid: stri
         version: 'v2'
       },
     })
+    if (!res.ok) {
+      const error = await res.json()
+      return NextResponse.json(error, { status: res.status })
+    }
     return NextResponse.json(
       { status: res.status }
     );

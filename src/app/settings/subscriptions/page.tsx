@@ -69,8 +69,8 @@ const Main = () => {
 const LoadingSkeleton = () => {
   return (
     <div>
-      {[...new Array(4)].map(() => (
-        <div className="shadow rounded-sm p-4 w-full bg-white mx-auto mb-2">
+      {[...new Array(4)].map((_, index) => (
+        <div className="shadow rounded-sm p-4 w-full bg-white mx-auto mb-2" key={`loading-${index}`}>
           <div className="animate-pulse flex w-full">
             <div className="flex-1 space-y-6 py-1">
               <div className="flex justify-between">

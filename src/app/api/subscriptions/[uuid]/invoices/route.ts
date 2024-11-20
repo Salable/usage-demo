@@ -14,9 +14,7 @@ export async function GET(req: NextRequest,  {params}: {params:{uuid: string}}) 
     })
     const data = await res.json()
     if (!res.ok) {
-      return NextResponse.json(
-        { status: res.status, error: data }
-      );
+      return NextResponse.json({ error: data.error }, { status: res.status })
     }
     return NextResponse.json(
       data, { status: res.status }

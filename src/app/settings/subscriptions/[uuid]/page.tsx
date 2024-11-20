@@ -12,6 +12,7 @@ import {
   salableProUsagePlanUuid
 } from "@/app/constants";
 import {format} from "date-fns";
+import {toast} from "react-toastify";
 
 export type User = {
   uuid: string;
@@ -69,15 +70,14 @@ export default function SubscriptionView({ params }: { params: { uuid: string } 
 
 const Main = ({uuid}: {uuid: string}) => {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [isPolling, setIsPolling] = useState(false)
   const [salableEventUuid, setSalableEventUuid] = useState<string | null>(null)
   const [disableButton, setDisableButton] = useState(false)
   const [isCancellingSubscription, setIsCancellingSubscription] = useState<boolean>(false)
   const [isReactivatingSubscription, setIsReactivatingSubscription] = useState<boolean>(false)
   const [pollSubscription, setPollSubscription] = useState<boolean>(false)
-  const [isChangingSubscription, setIsChangingSubscription] = useState<boolean>(false)
-  const [changingPlanUuid, setChangingPlanUuid] = useState<string | null>(null)
+  // const [isChangingSubscription, setIsChangingSubscription] = useState<boolean>(false)
+  // const [changingPlanUuid, setChangingPlanUuid] = useState<string | null>(null)
 
   const {data: session, isLoading, isValidating} = useSWR<Session>(`/api/session`)
   const {data: subscription, mutate: mutateSubscription, isValidating: isValidatingSubscription, isLoading: isLoadingSubscription } = useSWR<SalableSubscription>(`/api/subscriptions/${uuid}`)
@@ -101,7 +101,7 @@ const Main = ({uuid}: {uuid: string}) => {
     }[]
   }>(`/api/subscriptions/${uuid}/invoices`)
   const {data: currentUsage} = useSWR<{unitCount: number; updatedAt: string}>(`/api/usage/current?granteeId=${session?.uuid}&planUuid=${subscription?.planUuid}`)
-  const {data: usageRecords, isLoading: isLoadingUsageRecords, isValidating: isValidatingUsageRecords, mutate: mutateUsageRecords} = useSWR<GetAllUsageRecordsResponse>(`/api/usage?subscriptionUuid=${uuid}`)
+  const {data: usageRecords, isLoading: isLoadingUsageRecords, isValidating: isValidatingUsageRecords, mutate: mutateUsageRecords} = useSWR<GetAllUsageRecordsResponse>(`/api/usage?subscriptionUuid=${uuid}&sort=desc`)
 
   const creditCost = subscription?.planUuid === salableProUsagePlanUuid ? 200 : 100
 
@@ -117,9 +117,13 @@ const Main = ({uuid}: {uuid: string}) => {
         setPollSubscription(true)
       } else {
         setDisableButton(false)
+        toast.error('Failed to cancel subscription')
+        setIsCancellingSubscription(false)
       }
     } catch (e) {
       setDisableButton(false)
+      toast.error('Failed to cancel subscription')
+      setIsCancellingSubscription(false)
       console.log(e)
     }
   }
@@ -143,25 +147,25 @@ const Main = ({uuid}: {uuid: string}) => {
     }
   }
 
-  const changeSubscription = async (planUuid: string) => {
-    try {
-      setIsChangingSubscription(true)
-      setDisableButton(true)
-      const change = await fetch(`/api/subscriptions/${uuid}/change`, {
-        method: 'PUT',
-        body: JSON.stringify({planUuid})
-      })
-      if (change.ok) {
-        setIsPolling(true)
-        setChangingPlanUuid(planUuid)
-      } else {
-        setDisableButton(false)
-      }
-    } catch (e) {
-      setDisableButton(false)
-      console.log(e)
-    }
-  }
+  // const changeSubscription = async (planUuid: string) => {
+  //   try {
+  //     setIsChangingSubscription(true)
+  //     setDisableButton(true)
+  //     const change = await fetch(`/api/subscriptions/${uuid}/change`, {
+  //       method: 'PUT',
+  //       body: JSON.stringify({planUuid})
+  //     })
+  //     if (change.ok) {
+  //       setIsPolling(true)
+  //       setChangingPlanUuid(planUuid)
+  //     } else {
+  //       setDisableButton(false)
+  //     }
+  //   } catch (e) {
+  //     setDisableButton(false)
+  //     console.log(e)
+  //   }
+  // }
 
   useEffect(() => {
     if (isPolling) {
@@ -202,23 +206,23 @@ const Main = ({uuid}: {uuid: string}) => {
           }
         }, 500);
       }
-      if (isChangingSubscription) {
-        const subscriptionPolling = setInterval(async () => {
-          try {
-            const res = await fetch(`/api/licenses?planUuid=${changingPlanUuid}&status=active&granteeId=${session?.uuid}`)
-            const data = await res.json() as GetAllLicensesResponse
-            if (data?.data.length) {
-              clearInterval(subscriptionPolling)
-              setIsPolling(false)
-              router.push(`/settings/subscriptions/${data?.data[0].subscriptionUuid}`)
-            }
-          } catch (e) {
-            console.log(e)
-          }
-        }, 500);
-      }
+      // if (isChangingSubscription) {
+      //   const subscriptionPolling = setInterval(async () => {
+      //     try {
+      //       const res = await fetch(`/api/licenses?planUuid=${changingPlanUuid}&status=active&granteeId=${session?.uuid}`)
+      //       const data = await res.json() as GetAllLicensesResponse
+      //       if (data?.data.length) {
+      //         clearInterval(subscriptionPolling)
+      //         setIsPolling(false)
+      //         router.push(`/settings/subscriptions/${data?.data[0].subscriptionUuid}`)
+      //       }
+      //     } catch (e) {
+      //       console.log(e)
+      //     }
+      //   }, 500);
+      // }
     }
-  }, [salableEventUuid, pollSubscription, changingPlanUuid, isReactivatingSubscription]);
+  }, [salableEventUuid, pollSubscription, isReactivatingSubscription]);
 
   if (!isValidating && !isLoading && !session?.uuid) {
     router.push("/")
@@ -263,18 +267,18 @@ const Main = ({uuid}: {uuid: string}) => {
                     <div className='flex'>
                       {!subscription?.cancelAtPeriodEnd ? (
                         <>
-                          <button
-                            className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center justify-center mr-2`}
-                            onClick={async () => {
-                              await changeSubscription(subscription?.planUuid === salableProUsagePlanUuid ? salableBasicUsagePlanUuid : salableProUsagePlanUuid)
-                            }}
-                            disabled={disableButton}
-                          >
-                            {isChangingSubscription ? (
-                              <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>
-                            ) : ''}
-                            Change to {subscription?.planUuid === salableProUsagePlanUuid ? "Basic" : "Pro"}
-                          </button>
+                          {/*<button*/}
+                          {/*  className={`p-4 text-white rounded-md leading-none bg-blue-700 flex items-center justify-center mr-2`}*/}
+                          {/*  onClick={async () => {*/}
+                          {/*    await changeSubscription(subscription?.planUuid === salableProUsagePlanUuid ? salableBasicUsagePlanUuid : salableProUsagePlanUuid)*/}
+                          {/*  }}*/}
+                          {/*  disabled={disableButton}*/}
+                          {/*>*/}
+                          {/*  {isChangingSubscription ? (*/}
+                          {/*    <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div>*/}
+                          {/*  ) : ''}*/}
+                          {/*  Change to {subscription?.planUuid === salableProUsagePlanUuid ? "Basic" : "Pro"}*/}
+                          {/*</button>*/}
                           <button
                             className={`p-4 rounded-md leading-none text-white bg-red-600 flex items-center justify-center`}
                             onClick={async () => {
@@ -397,7 +401,6 @@ const LoadingSkeleton = () => {
         <div className="h-2 mb-2 bg-slate-300 rounded w-[75px]"></div>
         <div className="h-2 bg-slate-300 rounded w-[200px]"></div>
         <div className='flex items-center mt-6'>
-          <div className="mr-2 h-[46px] w-[100px] bg-slate-300 rounded-md"></div>
           <div className="mr-2 h-[46px] w-[160px] bg-slate-300 rounded-md"></div>
         </div>
       </div>
