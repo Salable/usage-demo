@@ -1,224 +1,175 @@
-'use client'
-import React, {useState} from "react";
-import {TickIcon} from "@/components/icons/tick-icon";
-import Head from "next/head";
-import LoadingSpinner from "@/components/loading-spinner";
+import {licenseCheck} from "@/fetch/licenses/check";
+import React, {Suspense} from "react";
+import {StringGeneratorForm} from "@/components/forms/string-generator-form";
+import {getSession} from "@/fetch/session";
+import {bytes, salableApiBaseUrl, salableBasicPlanUuid} from "@/app/constants";
+import {env} from "@/app/environment";
+import { Result } from "./actions/checkout-link";
+import { Session } from "./actions/sign-in";
+import {getErrorMessage} from "@/app/actions/get-error-message";
+import {FetchError} from "@/components/fetch-error";
 import Link from "next/link";
-import useSWR from "swr";
-import {Session} from "@/app/settings/subscriptions/[uuid]/page";
-import { useForm, SubmitHandler } from "react-hook-form"
-import {PlanButton} from "@/components/plan-button";
-import {appBaseUrl, salableBasicUsagePlanUuid, salableProUsagePlanUuid, salableUsageProductUuid} from "@/app/constants";
-import {format} from "date-fns";
-import {toast} from "react-toastify";
+import {LockIcon} from "@/components/icons/lock-icon";
+import LoadingSpinner from "@/components/loading-spinner";
+import {getCurrentUsage} from "@/fetch/usage";
 
-export type Bytes = '16' | '32' | '64'
-export type LicenseCheckResponse = {
-  capabilities: string[],
-  publicHash: string,
-  signature: string,
-  capsHashed: string,
-  capabilitiesEndDates: Record<string, string>
+export const metadata = {
+  title: 'Salable Usage Demo',
 }
 
-export default function Usage() {
+export type GetAllLicenses = {
+  first: string;
+  last: string;
+  data: {
+    uuid: string;
+    granteeId: string;
+    planUuid: string;
+    subscriptionUuid: string;
+  }[]
+}
+
+export default async function Home({searchParams}: {
+  searchParams: Promise<Record<string, string>>
+}) {
   return (
-    <>
-      <Head>
-        <title>Salable Seats Demo</title>
-      </Head>
-      <main>
-        <div className="w-full font-sans text-sm">
-          <Main />
+    <main>
+      <div className='max-w-[1000px] m-auto text-sm'>
+        <div>
+          <div className='mb-6'>
+            <h1 className='text-4xl font-bold text-gray-900 mr-4 text-center'>
+              Random String Generator
+            </h1>
+            <div className='mt-6'>
+              <Suspense fallback={<Loading />}>
+                <StringGenerator search={await searchParams} />
+              </Suspense>
+            </div>
+          </div>
         </div>
-      </main>
-    </>
+      </div>
+    </main>
   );
 }
 
-const Main = () => {
-  const [creditsUsedInSession, setCreditsUsedInSession] = useState<number>(0)
-  const [randomString, setRandomString] = useState<string | null>(null)
-  const [defaultBytes, setDefaultBytes] = useState<Bytes>('16')
+const StringGenerator = async ({search}: {search: Record<string, string>}) => {
+  const session = await getSession();
+  const currentUsage = await getCurrentUsage({
+    planUuid: salableBasicPlanUuid
+  });
 
-  const {data: session, isLoading: isLoadingSession, isValidating: isValidatingSession, mutate: mutateSession} = useSWR<Session>(`/api/session`)
-  const {data: licenseCheck, isLoading: isLoadingLicenseCheck, isValidating: isValidatingLicenseCheck, mutate: mutateLicenseCheck} = useSWR<LicenseCheckResponse>(`/api/licenses/check?productUuid=${salableUsageProductUuid}`)
-  const {data: currentUsage, isLoading: isLoadingCurrentUsage, isValidating: isValidatingCurrentUsage, mutate: mutateCurrentUsage} = useSWR<{unitCount: number; updatedAt: string}>(`/api/usage/current?planUuid=${licenseCheck?.capabilitiesEndDates?.['128'] ? salableProUsagePlanUuid : salableBasicUsagePlanUuid}`)
-
-  const usage = currentUsage?.unitCount ?? 0
-
-  const StringGenerator = () => {
-    const {register, handleSubmit, watch, formState: {isSubmitting}} = useForm<{
-      bytes: Bytes
-    }>({
-      defaultValues: {bytes: defaultBytes},
-      mode: 'onChange'
-    })
-
-    const onSubmit: SubmitHandler<{
-      bytes: Bytes
-    }> = async (formData) => {
-      const res = await fetch('/api/strings', {
-        method: 'POST',
-        body: JSON.stringify({bytes: Number(formData.bytes)})
-      })
-      setDefaultBytes(formData.bytes)
-      if (res.ok) {
-        const data = await res.json()
-        setRandomString(data.randomString)
-        setCreditsUsedInSession(creditsUsedInSession + data.credits)
+  if (search.planUuid && session?.uuid) {
+    await new Promise<void>(async (resolve) => {
+      while (true) {
+        try {
+          const data = await getLicenses(session, search.planUuid);
+          if (data.error) break
+          if (data.data?.data[0].planUuid === search.planUuid) {
+            resolve()
+            break
+          }
+          await new Promise(r => setTimeout(r, 500));
+        } catch (e) {
+          console.log(e)
+          break
+        }
       }
-    }
-
-    if (!licenseCheck?.capabilitiesEndDates) return null
-
-    return (
-      <div>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className='flex justify-center items-center'>
-            <h2 className='text-center mr-3'>Bytes</h2>
-            <label htmlFor='16_bytes'
-                   className={`p-3 inline-flex flex-col leading-none border-2 mr-2 rounded-md cursor-pointer ${watch().bytes === '16' ? "border-black bg-black text-white" : ""}`}>
-              16
-            </label>
-            <input id='16_bytes' type="radio" value={'16'} {...register('bytes')} className='hidden'/>
-
-            <label htmlFor='32_bytes'
-                   className={`p-3 inline-flex flex-col leading-none border-2 mr-2 rounded-md cursor-pointer ${watch().bytes === '32' ? "border-black bg-black text-white" : ""}`}>
-              32
-            </label>
-            <input id='32_bytes' type="radio" value={'32'} {...register('bytes')} className='hidden'/>
-
-            <label htmlFor='64'
-                   className={`p-3 inline-flex flex-col leading-none border-2 mr-2 rounded-md cursor-pointer ${watch().bytes === '64' ? "border-black bg-black text-white" : ""}`}>
-              64
-            </label>
-            <input id='64' type="radio" value={'64'} {...register('bytes')} className='hidden'/>
-
-            <button
-              className={`p-3 text-white rounded-md leading-none bg-blue-700 text-sm`}
-            >{!isSubmitting ? "Generate" :
-              <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}</button>
-          </div>
-        </form>
-        {randomString ? (
-          <div className='mt-6 relative text-center flex justify-center'>
-          <pre
-            className='p-2 leading-none truncate text-lg text-center bg-white rounded-l-full'>{randomString}</pre>
-            <button
-              className='rounded-r-full bg-blue-700 uppercase px-2 pr-[12px] text-white text-xs'
-              onClick={() => {
-                navigator.clipboard.writeText(randomString)
-                toast.success('Successfully copied')
-              }}
-            >
-              Copy
-            </button>
-          </div>
-        ) : null}
-      </div>
-    )
+    })
+  }
+  const check = session?.uuid ? await licenseCheck(session.uuid) : {
+    data: null, error: null
   }
 
   return (
     <>
-      <div className='max-w-[1000px] m-auto'>
-        {(!isLoadingSession && !isValidatingSession) && (!isLoadingLicenseCheck && !isValidatingLicenseCheck) && (!isLoadingCurrentUsage && !isValidatingCurrentUsage) ? (
-          <>
-            {!licenseCheck?.capabilitiesEndDates ? (
-              <div className='grid grid-cols-3 gap-6'>
-                <div className='p-6 rounded-lg bg-white shadow flex-col'>
-                  <h2 className='mb-2 font-bold text-2xl'>Basic</h2>
-                  <div className='mb-4'>
-                    <div className='flex items-end mb-1'>
-                      <div className='text-3xl mr-2'>
-                        <span className='font-bold'>£1</span>
-                        <span className='text-xl'> / per credit</span>
-                      </div>
-                    </div>
-                    <div className='text-xs'>per month</div>
-                  </div>
-                  <p className='text-gray-500 text-lg mb-4'>
-                    Everything you need to start building secure strings.
-                  </p>
-                  <div className='mb-6'>
-                    <div className='flex items-center'>
-                      <span className='mr-1'><TickIcon fill="#000" width={15} height={15}/></span>16 byte strings
-                    </div>
-                    <div className='flex items-center'>
-                      <span className='mr-1'><TickIcon fill="#000" width={15} height={15}/></span>32 byte strings
-                    </div>
-                    <div className='flex items-center'>
-                      <span className='mr-1'><TickIcon fill="#000" width={15} height={15}/></span>64 byte strings
-                    </div>
-                  </div>
-                  <div className='flex'>
-                    {!isLoadingSession && !session?.uuid ? (
-                      <Link
-                        href={`/sign-up?planUuid=${salableBasicUsagePlanUuid}&successUrl=${appBaseUrl}`}
-                        className='block p-4 text-white rounded-md leading-none bg-blue-700 w-full text-center'
-                      >
-                        Sign up
-                      </Link>
-                    ) : (
-                      <PlanButton uuid={salableBasicUsagePlanUuid} successUrl={appBaseUrl} />
-                    )}
-                  </div>
+      {!check.error ? (
+        <>
+          <StringGeneratorForm check={check.data} currentUsage={currentUsage.data} />
+
+          {!check.data ? (
+            <div className='flex justify-center max-w-[400px] mx-auto'>
+              <div className='rounded-md inline-flex flex-col mx-auto mt-6 p-3 border-2'>
+                <p>To start creating secure strings subscribe to a plan from our pricing table and get started!</p>
+                <div className='mt-3'>
+                  <Link href='/pricing' className='inline-block p-3 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition'>
+                    Pricing
+                  </Link>
                 </div>
               </div>
-            ) : null}
-            {licenseCheck?.capabilitiesEndDates ? (
-              <>
-                <div>
-                  <div className='mb-6'>
-                    <h2 className='text-4xl font-bold text-gray-900 mr-4 text-center'>
-                      Random String Generator
-                    </h2>
-                  </div>
-                </div>
-                <div className='mt-6'>
-                  <StringGenerator/>
-                </div>
-                <div className='mt-6'>
-                  <h2 className='text-2xl font-bold text-gray-900 mr-4 text-center'>{usage + creditsUsedInSession} <span
-                    className='text-xs text-gray-500 font-normal'>credits used</span></h2>
-                  {currentUsage?.updatedAt ? (
-                    <div className='text-gray-500 text-center'>Last updated
-                      at {format(new Date(currentUsage?.updatedAt), 'd LLL yyy H:mm')}</div>
-                  ) : null}
-                </div>
-              </>
-            ) : null}
-          </>
-        ) : (
-          <div className="w-[20px]">
-            <LoadingSpinner />
-          </div>
-        )}
-      </div>
+            </div>
+          ) : null}
+        </>
+      ) : check.error ? (
+        <FetchError error={check.error} />
+      ) : currentUsage.error ? (
+        <FetchError error={currentUsage.error} />
+      ) : null}
     </>
   )
 }
 
-const LoadingSkeleton = () => {
+const Loading = () => {
   return (
-    <div className='animate-pulse'>
-      <div className="animate-pulse items-center flex justify-center">
-        <div className="h-2 bg-slate-300 rounded w-[300px]"></div>
-      </div>
-
-      <div className='animate-pulse flex justify-center items-center mt-6'>
-        <div className="mr-2 h-2 bg-slate-300 rounded w-[40px]"></div>
-        {[...new Array(4)].map((_, i) => (
-          <div className="mr-2 h-[43px] w-[43px] bg-slate-300 rounded-md"></div>
+    <div>
+      <div className='flex justify-center items-center'>
+        <h2 className='text-center mr-2'>Bytes</h2>
+        {bytes.map((size, i) => (
+          <div
+            className={`p-3 inline-flex items-center leading-none border-2 mr-2 rounded-md bg-gray-200`}
+            key={`loading-${i}`}
+          >
+            {size}
+            <div className='ml-1'><LockIcon height={14} width={14} fill='black'/></div>
+          </div>
         ))}
-        <div className="mr-2 h-[43px] w-[84px] bg-slate-300 rounded-md"></div>
+        <div className='h-[20px] w-[20px]'>
+          <LoadingSpinner fill='#000' />
+        </div>
       </div>
-
-      <div className='animate-pulse mt-6 flex flex-col justify-center items-center'>
-        <div className="h-2 mb-3 bg-slate-300 rounded w-[100px]"></div>
-        <div className="h-2 bg-slate-300 rounded w-[200px]"></div>
+      <div className='mt-6'>
+        <div className='flex flex-col items-center'>
+        <div className='flex items-end mb-1'>
+            <span className='h-[29px] w-[20px] bg-slate-300 animate-pulse rounded-md mr-1'/>
+            <span className='text-xs text-gray-500 font-normal'>credits used</span>
+          </div>
+          <div className='text-gray-500 flex items-center'>
+            Last updated at
+            <span className='h-[20px] w-[115px] bg-slate-300 animate-pulse rounded-md ml-1'/>
+          </div>
+        </div>
       </div>
     </div>
   )
+}
+
+
+async function getLicenses(session: Session, planUuid: string): Promise<Result<GetAllLicenses>> {
+  try {
+    const res = await fetch(`${salableApiBaseUrl}/licenses?granteeId=${session.uuid}&planUuid=${planUuid}&status=active`, {
+      headers: {
+        'x-api-key': env.SALABLE_API_KEY,
+        version: 'v2',
+        cache: 'no-cache',
+      },
+    })
+    if (res.ok) {
+      const data = await res.json() as GetAllLicenses
+      return {
+        data,
+        error: null
+      }
+    }
+
+    const error = await getErrorMessage(res)
+    console.log(error)
+    return {
+      data: null,
+      error: 'Failed to fetch licenses'
+    }
+  } catch (e) {
+    console.log(e)
+    return {
+      data: null,
+      error: 'Failed to fetch licenses'
+    }
+  }
 }
