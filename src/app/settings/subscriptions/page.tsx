@@ -1,46 +1,35 @@
-'use client'
-import React from "react";
-import "react-toastify/dist/ReactToastify.css";
+import {getAllSubscriptions} from "@/fetch/subscriptions";
 import Link from "next/link";
-import Head from "next/head";
-import useSWR from "swr";
-import {useRouter} from "next/navigation";
-import {GetAllSubscriptionsResponse} from "@/app/api/subscriptions/route";
-import {Session} from "@/app/settings/subscriptions/[uuid]/page";
+import React, {Suspense} from "react";
+import {FetchError} from "@/components/fetch-error";
 
-export default function SubscriptionsView() {
+export const metadata = {
+  title: 'Subscriptions',
+}
+
+export default async function SubscriptionPage() {
   return (
-    <>
-      <Head><title>Salable Seats Demo</title></Head>
-      <main>
-        <div className="w-full font-sans text-sm">
-          <Main  />
-        </div>
-      </main>
-    </>
+    <main>
+      <div className='max-w-[1000px] m-auto text-sm'>
+        <h1 className='text-3xl mb-4'>Subscriptions</h1>
+        <Suspense fallback={<Loading />}>
+          <SubscriptionsList />
+        </Suspense>
+      </div>
+    </main>
   );
 }
 
-const Main = () => {
-  const router = useRouter()
-  const {data: session, isLoading, isValidating} = useSWR<Session>(`/api/session`)
-  const {data: subscriptions, isValidating: isValidatingSubscriptions, isLoading: isLoadingSubscriptions } = useSWR<GetAllSubscriptionsResponse>(`/api/subscriptions`)
-
-  if (!isValidating && !isLoading && !session?.uuid) {
-    router.push("/")
-  }
+const SubscriptionsList = async () => {
+  const subscriptions = await getAllSubscriptions()
   return (
-    <div className='max-w-[1000px] m-auto'>
-      <h1 className='text-3xl mb-6 flex items-center'>Subscriptions</h1>
-      {!isValidatingSubscriptions && !isLoadingSubscriptions ? (
+    <div>
+      {subscriptions.data ? (
         <div>
-          {subscriptions?.data.length ? (
-            subscriptions.data.sort((a, b) => {
-              if (a.status === 'CANCELED') return 1
-              if (b.status === 'CANCELED') return -1
-              return 0
-            }).map((subscription, index) => (
-              <div className='bg-white mb-3 flex justify-between items-center shadow rounded-sm p-3' key={`subscription-${index}`}>
+          {subscriptions.data.data.length ? (
+            subscriptions.data.data.map((subscription, index) => (
+              <div className='bg-white mb-3 flex justify-between items-center shadow rounded-sm p-3'
+                   key={`subscription-${index}`}>
                 <div className='flex items-center'>
                   <div className='text-lg mr-2 leading-none'>{subscription.plan.displayName}</div>
                   {subscription.plan.licenseType === 'perSeat' ? <span
@@ -49,24 +38,28 @@ const Main = () => {
                 <div>
                   {subscription.status === 'CANCELED' ? <span
                     className='bg-red-200 text-red-500 text-xs uppercase p-1 leading-none rounded-sm font-bold mr-2'>{subscription.status}</span> : null}
-                  <Link className='text-blue-500' href={`/settings/subscriptions/${subscription.uuid}`}>View</Link>
+                  <Link className='text-blue-700 hover:underline'
+                        href={`/settings/subscriptions/${subscription.uuid}`}>View</Link>
                 </div>
               </div>
             ))
           ) : (
             <div>
-              <p className='mb-3'>No subscriptions found. Subscribe to one of our plans to <Link href='/' className={'text-blue-500'}>get started!</Link></p>
+              <p className='mb-3'>
+                No subscriptions found. Subscribe to one of our plans to
+                <Link href='/pricing' className={'text-blue-700 hover:underline'}>get started!</Link>
+              </p>
             </div>
           )}
         </div>
-      ) : (
-        <LoadingSkeleton />
-      )}
+      ) : subscriptions.error ? (
+        <FetchError error={subscriptions.error}/>
+      ) : null}
     </div>
   )
 }
 
-const LoadingSkeleton = () => {
+const Loading = () => {
   return (
     <div>
       {[...new Array(4)].map((_, index) => (
