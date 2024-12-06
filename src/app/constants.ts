@@ -1,7 +1,6 @@
 import {Bytes} from "@/components/forms/string-generator-form";
 
 if (!process.env.NEXT_PUBLIC_SALABLE_PLAN_UUID) throw new Error('Missing env NEXT_PUBLIC_SALABLE_PLAN_UUID')
-if (!process.env.NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID) throw new Error('Missing env NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID')
 if(!process.env.NEXT_PUBLIC_SALABLE_API_BASE_URL) throw new Error('Missing env NEXT_PUBLIC_SALABLE_API_BASE_URL')
 if(!process.env.NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ) throw new Error('Missing env NEXT_PUBLIC_SALABLE_API_KEY_PLANS_READ')
 if(!process.env.NEXT_PUBLIC_PRODUCT_UUID) throw new Error('Missing env NEXT_PUBLIC_PRODUCT_UUID')
