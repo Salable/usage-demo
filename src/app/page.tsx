@@ -14,7 +14,7 @@ import LoadingSpinner from "@/components/loading-spinner";
 import {getCurrentUsage} from "@/fetch/usage";
 
 export const metadata = {
-  title: 'Salable usage demo',
+  title: 'Salable Usage Demo',
 }
 
 export type GetAllLicenses = {

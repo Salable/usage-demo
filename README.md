@@ -1,6 +1,6 @@
-# Salable "flat rate" web app demo
+# Salable Usage Pricing Demo
 
-This demo is to demonstrate using [flat rate](https://www.salable.app/features/flat-rate-pricing) billing with Salable.
+This demo is to demonstrate using [usage](https://www.salable.app/features/usage-based-pricing) pricing with Salable.
 
 ## Tech stack
 - [Next.js](http://Next.js)
@@ -14,7 +14,7 @@ This demo is to demonstrate using [flat rate](https://www.salable.app/features/f
 
 [View demo](https://flat-rate-demo.vercel.app/)
 
-The product in the demo generates strings with random data which vary in size based on the number of bytes selected. To get access to the product a user must sign up and subscribe to a plan. The email of the sign up does not have to be real, this is just for demo purposes. The byte sizes for the strings are feature locked behind different plans. Once a user has subscribed they will be able access some or all of these features depending on what plan they are licensed on.
+The product in the demo generates strings with random data which vary in size based on the number of bytes selected. Each byte size has a credit cost which will be charged to your subscription on consumption and billed at the end of the month. To get access to the product a user must sign up and subscribe to a plan. The email of the sign up does not have to be real, this is just for demo purposes. The byte sizes for the strings are feature locked behind different plans. Once a user has subscribed they will be able access some or all of these features depending on what plan they are licensed on.
 
 ### Checkout
 This instance of Salable is integrated with Stripe in test mode so no real money will ever be taken.
