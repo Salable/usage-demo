@@ -37,7 +37,7 @@ export const PlanButton = ({session, planUuid}: {session: Session, planUuid: str
   return (
     <div className='flex-col w-full'>
       <button
-        className={`p-4 text-white rounded-md leading-none bg-blue-700 transition w-full flex justify-center ${!isFetchingUrl ? 'hover:bg-blue-900' : ''}`}
+        className={`p-4 text-white rounded-md leading-none font-bold bg-blue-700 transition w-full flex justify-center ${!isFetchingUrl ? 'hover:bg-blue-900' : ''}`}
         onClick={handleClick}
       >
         {isFetchingUrl ? <div className='w-[14px] mr-2'><LoadingSpinner fill="white"/></div> : null}

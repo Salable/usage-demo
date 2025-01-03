@@ -63,7 +63,7 @@ const StringGenerator = async ({search}: {search: Record<string, string>}) => {
         try {
           const data = await getLicenses(session, search.planUuid);
           if (data.error) break
-          if (data.data?.data[0].planUuid === search.planUuid) {
+          if (data.data?.data?.[0].planUuid === search.planUuid) {
             resolve()
             break
           }
@@ -90,7 +90,7 @@ const StringGenerator = async ({search}: {search: Record<string, string>}) => {
               <div className='rounded-md inline-flex flex-col mx-auto mt-6 p-3 border-2'>
                 <p>To start creating secure strings subscribe to a plan from our pricing table and get started!</p>
                 <div className='mt-3'>
-                  <Link href='/pricing' className='inline-block p-3 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition'>
+                  <Link href='/pricing' className='inline-block p-3 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition'>
                     Pricing
                   </Link>
                 </div>

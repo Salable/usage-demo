@@ -40,7 +40,7 @@ export const SignInForm = () => {
         {errors.password ? <p className='text-red-600 mt-1'>{errors.password.message}</p> : null}
       </fieldset>
       <div className='mb-4'>
-        <button className={`p-4 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition`}>{!isSubmitting ? "Sign in" :
+        <button className={`p-4 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition`}>{!isSubmitting ? "Sign in" :
           <div className='w-[15px]'><LoadingSpinner fill="white"/></div>}</button>
       </div>
       {errors.root?.serverError ? (

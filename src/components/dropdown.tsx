@@ -53,7 +53,7 @@ export const Dropdown = ({user}: {user: User | null}) => {
           )}
         </div>
       ) : (
-        <Link className='p-3 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition w-full text-center text-sm' href="/sign-in">Sign in</Link>
+        <Link className='p-3 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition w-full text-center text-sm' href="/sign-in">Sign in</Link>
       )}
     </>
   )

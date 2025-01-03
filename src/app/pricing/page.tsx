@@ -60,7 +60,7 @@ const BasicPlanPricingTableButton = async () => {
     return (
       <Link
         href={`/sign-up?planUuid=${salableBasicPlanUuid}`}
-        className='block p-4 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition w-full text-center'
+        className='block p-4 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition w-full text-center'
       >
         Sign up
       </Link>
@@ -79,13 +79,13 @@ const BasicPlanPricingTableButton = async () => {
   return (
     <>
       {check?.data?.capabilities?.find((a) => a.capability === 'basic') ? (
-        <div className={`p-4 text-white rounded-md leading-none bg-green-700 inline-flex items-center w-full justify-center`}>
+        <div className={`p-4 text-white rounded-md leading-none bg-green-700 inline-flex items-center w-full justify-center font-bold`}>
           <div className='mr-1'><TickIcon fill='#FFF' height={14} width={14}/></div>
           Already subscribed
         </div>
       ) : check?.data?.capabilities?.find((a) => a.capability === 'basic') && !check?.data?.capabilities?.find((a) => a.capability === 'pro') ? (
         <Link href='/settings/subscriptions'
-              className='block p-4 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition w-full text-center'>Move to Basic plan</Link>
+              className='block p-4 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition w-full text-center'>Move to Basic plan</Link>
       ) : (
         <PlanButton session={session} planUuid={salableBasicPlanUuid}/>
       )}

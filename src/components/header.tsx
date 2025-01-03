@@ -15,7 +15,7 @@ export const Header = async () => {
 
   return (
     <header className='bg-white px-6'>
-      <div className='max-w-[1000px] m-auto py-4 flex justify-between items-center'>
+      <div className='max-w-[1500px] m-auto py-4 flex justify-between items-center'>
         <Link className='flex items-center' href='/'>
           <div className='w-[30px] mr-2'><SalableLogo/></div>
           <span>Salable Usage Demo</span>
@@ -27,7 +27,7 @@ export const Header = async () => {
             ) : user.error ? (
               <span className='text-red-600 text-sm'>{user.error}</span>
             ) : (
-              <Link className='p-3 text-white rounded-md leading-none bg-blue-700 hover:bg-blue-900 transition w-full text-center text-sm' href="/sign-in">Sign in</Link>
+              <Link className='p-3 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition w-full text-center text-sm' href="/sign-in">Sign in</Link>
             )}
           </div>
         </div>
