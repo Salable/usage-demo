@@ -19,7 +19,7 @@ export const CancelPlanButton = ({subscriptionUuid}: {subscriptionUuid: string})
 
   return (
     <button
-      className={`p-4 rounded-md leading-none text-white bg-red-600 hover:bg-red-700 flex items-center justify-center transition`}
+      className={`p-4 rounded-md leading-none text-white bg-red-600 hover:bg-red-700 flex items-center justify-center transition font-bold`}
       onClick={handleClick}
       disabled={isCancellingSubscription}>
       {isCancellingSubscription ? (
