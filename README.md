@@ -1,4 +1,4 @@
-# Salable Usage Pricing Demo
+![Salable Usage Pricing Demo](https://raw.githubusercontent.com/Salable/usage-demo/94992bd38f24dcf5a7e3181f35701320b48ecee0/public/usage-banner.gif)
 
 This demo is to demonstrate using [usage](https://www.salable.app/features/usage-based-pricing) pricing with Salable.
 
@@ -29,3 +29,8 @@ If you are creating an app within an ecosystem like trello or slack the auth che
 If you are creating a standalone app there are other third party auth solutions such as [Clerk](https://clerk.com/) or [Auth.js](http://Auth.js) that can be used instead
 ### User sessions
 Iron session to store user session data. [View docs](https://github.com/vvo/iron-session)
+
+## Need some help?
+Get answers and guidance from our own developers and commercial model consultants. If you have an implementation query, or you are not sure which pricing model to use for your app, our people are ready to help.
+
+[![Join salable discord](https://raw.githubusercontent.com/Salable/usage-demo/94992bd38f24dcf5a7e3181f35701320b48ecee0/public/discord-button.png)](https://discord.com/channels/1064480618546737163/1219751191483781214)
