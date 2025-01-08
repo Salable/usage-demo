@@ -35,7 +35,7 @@ export const Dropdown = ({user}: {user: User | null}) => {
           {dropDownOpen && (
             <div ref={ref} className='absolute flex flex-col right-0 top-[45px] bg-white width-max-content text-right w-[200px] rounded-sm shadow z-10'>
               <div className='p-3 block f-full border-b text-sm text-center'>Hello, {user.username}</div>
-              <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/settings/subscriptions'} onClick={() => setDropDownOpen(false)}>Subscriptions</Link>
+              <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/dashboard/subscriptions'} onClick={() => setDropDownOpen(false)}>Subscriptions</Link>
               <Link className='p-3 block f-full border-b hover:bg-gray-50 text-sm' href={'/pricing'} onClick={() => setDropDownOpen(false)}>Pricing</Link>
               <button className='p-3 block f-full text-right hover:bg-gray-50 text-sm' onClick={async () => {
                 try {

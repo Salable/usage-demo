@@ -55,7 +55,6 @@ export default async function Pricing() {
 
 const BasicPlanPricingTableButton = async () => {
   const session = await getSession()
-
   if (!session?.uuid) {
     return (
       <Link
@@ -66,16 +65,10 @@ const BasicPlanPricingTableButton = async () => {
       </Link>
     )
   }
-
   const check = session?.uuid ? await licenseCheck(session.uuid) : {
     data: null, error: null
   }
-  if (check.error) {
-    return (
-      <FetchError error='Failed to create button' />
-    )
-  }
-
+  if (check.error) return <FetchError error='Failed to create button' />
   return (
     <>
       {check?.data?.capabilities?.find((a) => a.capability === 'basic') ? (
@@ -83,9 +76,6 @@ const BasicPlanPricingTableButton = async () => {
           <div className='mr-1'><TickIcon fill='#FFF' height={14} width={14}/></div>
           Already subscribed
         </div>
-      ) : check?.data?.capabilities?.find((a) => a.capability === 'basic') && !check?.data?.capabilities?.find((a) => a.capability === 'pro') ? (
-        <Link href='/settings/subscriptions'
-              className='block p-4 text-white rounded-md leading-none font-bold bg-blue-700 hover:bg-blue-900 transition w-full text-center'>Move to Basic plan</Link>
       ) : (
         <PlanButton session={session} planUuid={salableBasicPlanUuid}/>
       )}

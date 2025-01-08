@@ -61,9 +61,9 @@ const StringGenerator = async ({search}: {search: Record<string, string>}) => {
     await new Promise<void>(async (resolve) => {
       while (true) {
         try {
-          const data = await getLicenses(session, search.planUuid);
-          if (data.error) break
-          if (data.data?.data?.[0].planUuid === search.planUuid) {
+          const licenses = await getLicenses(session, search.planUuid);
+          if (licenses.error) break
+          if (licenses.data?.data?.[0]?.planUuid === search.planUuid) {
             resolve()
             break
           }
