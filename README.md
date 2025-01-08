@@ -33,4 +33,4 @@ Iron session to store user session data. [View docs](https://github.com/vvo/iron
 ## Need some help?
 Get answers and guidance from our own developers and commercial model consultants. If you have an implementation query, or you are not sure which pricing model to use for your app, our people are ready to help.
 
-[![Join salable discord](https://raw.githubusercontent.com/Salable/usage-demo/94992bd38f24dcf5a7e3181f35701320b48ecee0/public/discord-button.png)](https://discord.com/channels/1064480618546737163/1219751191483781214)
+[![Join salable discord](https://raw.githubusercontent.com/Salable/usage-demo/refs/heads/main/public/discord-button.png)](https://discord.com/channels/1064480618546737163/1219751191483781214)
