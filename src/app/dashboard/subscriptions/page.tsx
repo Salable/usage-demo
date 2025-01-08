@@ -39,7 +39,7 @@ const SubscriptionsList = async () => {
                   {subscription.status === 'CANCELED' ? <span
                     className='bg-red-200 text-red-500 text-xs uppercase p-1 leading-none rounded-sm font-bold mr-2'>{subscription.status}</span> : null}
                   <Link className='text-blue-700 hover:underline'
-                        href={`/settings/subscriptions/${subscription.uuid}`}>View</Link>
+                        href={`/dashboard/subscriptions/${subscription.uuid}`}>View</Link>
                 </div>
               </div>
             ))
