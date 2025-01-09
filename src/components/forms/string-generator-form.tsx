@@ -57,7 +57,7 @@ export const StringGeneratorForm = (
       <>
         <label
           htmlFor={size}
-          className={`p-3 inline-flex items-center leading-none border-2 mr-2 rounded-md
+          className={`p-3 inline-flex items-center leading-none border-2 mr-2 rounded-md font-bold
             ${watch().bytes === size ? "border-black bg-black text-white" : ""}
             ${capability ? "cursor-pointer" : ""}
             ${!capability ? "bg-gray-200" : ""}
