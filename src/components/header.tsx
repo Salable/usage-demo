@@ -12,13 +12,13 @@ import {env} from "@/app/environment";
 
 export const Header = async () => {
   const user = await getUser();
-
   return (
     <header className='bg-white px-6'>
       <div className='max-w-[1500px] m-auto py-4 flex justify-between items-center'>
         <Link className='flex items-center' href='/'>
-          <div className='w-[30px] mr-2'><SalableLogo/></div>
-          <span>Salable Usage Demo</span>
+          <div className='w-[30px]'><SalableLogo/></div>
+          <span className='w-[2px] h-[20px] bg-gray-200 mx-4' />
+          <span className='text-gray-600'>Usage Demo</span>
         </Link>
         <div>
           <div className="flex justify-between items-center">
