@@ -1,11 +1,8 @@
-import { PrismaClient } from "@prisma/client";
-import { PrismaLibSQL } from "@prisma/adapter-libsql";
-import { createClient } from "@libsql/client";
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from '@prisma/client'
+import {env} from "@/app/environment";
 
-const libsql = createClient({
-  url: process.env.TURSO_DATABASE_URL!,
-  authToken: process.env.TURSO_AUTH_TOKEN,
-});
-
-const adapter = new PrismaLibSQL(libsql);
-export const prismaClient = new PrismaClient({ adapter });
+const pool = new Pool({ connectionString: env.DATABASE_URL })
+const adapter = new PrismaPg(pool)
+export const prismaClient = new PrismaClient({ adapter })
