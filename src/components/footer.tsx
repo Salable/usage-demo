@@ -13,7 +13,7 @@ export const Footer = () => (
         </div>
         <div className='flex md:block flex-col items-center'>
           <Link
-            href='https://github.com/Salable/usage-demo'
+            href='https://github.com/Salable/salable-usage-demo'
             className='md:mr-4 mt-3 md:mt-0 border border-black rounded-md p-4 leading-none inline-flex items-center text-green-400 fill-green-400 text-sm font-bold transition hover:bg-green-400 hover:text-gray-900 hover:fill-gray-900'
           >
             <div className='h-[16px] w-[16px] mr-2'>
