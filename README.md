@@ -105,7 +105,7 @@ To remove the requirement of Docker we will change the db provider to `sqlite`.
 ### Update Environment Variables
 
 1. Copy the Product ID from the "General Settings" tab and assign to `NEXT_PUBLIC_PRODUCT_UUID` in the `.env` file.
-2. Go to `Plans`. Assign the `Basic` ID to `NEXT_PUBLIC_SALABLE_PLAN_UUID` and the `Pro` ID to `NEXT_PUBLIC_SALABLE_PRO_PLAN_UUID`.
+2. Go to `Plans`. Assign the `Basic` ID to `NEXT_PUBLIC_SALABLE_PLAN_UUID`.
 3. Go to `API Keys`.
 4. Copy the API Key that was generated on sign up and assign to `SALABLE_API_KEY`.
 5. Run `npm run dev`
