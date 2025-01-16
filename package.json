@@ -2,6 +2,7 @@
   "name": "test-app-next",
   "version": "0.1.0",
   "private": true,
+  "license": "MIT",
   "scripts": {
     "dev": "next dev",
     "build": "prisma generate && prisma db push && next build",
