@@ -1,39 +1,23 @@
-import {env} from "@/app/environment";
-import {salableApiBaseUrl, salableProductUuid} from "@/app/constants";
-import {LicenseCheckResponse} from "@/components/forms/string-generator-form";
+import {salableProductUuid} from "@/app/constants";
 import {Result} from "@/app/actions/checkout-link";
-import {getErrorMessage} from "@/app/actions/get-error-message";
+import {salable} from "@/app/salable";
+import {CheckLicensesCapabilitiesResponse} from "@salable/node-sdk/dist/src/types";
 
-export async function licenseCheck(granteeId: string): Promise<Result<LicenseCheckResponse | null>> {
+export async function licenseCheck(granteeId: string): Promise<Result<CheckLicensesCapabilitiesResponse>> {
   try {
-    const res = await fetch(`${salableApiBaseUrl}/licenses/check?granteeIds=${granteeId}&productUuid=${salableProductUuid}`, {
-      headers: { 'x-api-key': env.SALABLE_API_KEY, version: 'v2' },
-      cache: "no-store"
+    const check = await salable.licenses.check({
+      productUuid: salableProductUuid,
+      granteeIds: [granteeId],
     })
-    if (res.ok) {
-      if (res.headers.get('content-type') === 'text/plain') {
-        return {
-          data: null,
-          error: null
-        }
-      }
-      const data = await res.json() as LicenseCheckResponse
-      return {
-        data,
-        error: null
-      }
-    }
-    const error = await getErrorMessage(res)
-    console.log(error)
     return {
-      data: null,
-      error: 'Failed to fetch license check'
+      data: check,
+      error: null
     }
   } catch (e) {
     console.log(e)
     return {
       data: null,
-      error: 'Unknown error'
+      error: 'Failed to check license'
     }
   }
 }

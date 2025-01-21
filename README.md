@@ -45,7 +45,7 @@ Iron session to store user session data. [View docs](https://github.com/vvo/iron
 2. Run `npm install`
 3. Create an `.env` file (`cp .env.example .env`)
 4. [Install Docker](https://www.docker.com/get-started/). If you already have Docker installed skip this step. If you don't want to run Docker for local development skip to the next stage for an alternative.
-5. Run `docker-compose up -d`
+5. Run `docker compose up -d`
 6. Run `npx prisma db push`
 
 ### Alternative to Docker

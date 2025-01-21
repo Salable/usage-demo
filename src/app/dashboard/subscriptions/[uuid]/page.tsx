@@ -1,13 +1,12 @@
-import {getOneSubscription, SalableSubscription} from "@/fetch/subscriptions";
+import {getOneSubscription, getSubscriptionInvoices, SubscriptionExpandedPlan} from "@/fetch/subscriptions";
 import React, {Suspense} from "react";
-import {getSubscriptionInvoices} from "@/app/actions/subscriptions";
 import {format} from "date-fns";
 import Link from "next/link";
 import {CancelPlanButton} from "@/components/cancel-plan-button";
 import {FetchError} from "@/components/fetch-error";
 import {getAllUsage, getCurrentUsage} from "@/fetch/usage";
 import {getSession} from "@/fetch/session";
-import {redirect} from "next/navigation";
+import {notFound, redirect} from "next/navigation";
 
 export const metadata = {
   title: 'Subscription',
@@ -25,6 +24,7 @@ export default async function SubscriptionPage({ params }: { params: Promise<{ u
       </div>
     )
   }
+  if (!subscription.data) return notFound()
   if (subscription.data?.email !== session.email) redirect('/')
 
   return (
@@ -50,7 +50,7 @@ export default async function SubscriptionPage({ params }: { params: Promise<{ u
   )
 }
 
-const Subscription = async ({uuid, subscription}: { uuid: string, subscription: SalableSubscription }) => {
+const Subscription = async ({uuid, subscription}: { uuid: string, subscription: SubscriptionExpandedPlan }) => {
   return (
     <>
       <h1 className='text-3xl mb-6 flex items-center'>Subscription
@@ -81,7 +81,7 @@ const Subscription = async ({uuid, subscription}: { uuid: string, subscription: 
 }
 
 const CurrentUsage = async ({planUuid}: {planUuid: string}) => {
-  const currentUsage = await getCurrentUsage({planUuid});
+  const currentUsage = await getCurrentUsage(planUuid);
   return (
     <>
       {currentUsage.data ? (

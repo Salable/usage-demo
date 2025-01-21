@@ -1,36 +1,25 @@
 'use server'
 import {Session} from "@/app/actions/sign-in";
-import {appBaseUrl, salableApiBaseUrl} from "@/app/constants";
-import {getErrorMessage} from "@/app/actions/get-error-message";
-import {env} from "@/app/environment";
+import {appBaseUrl} from "@/app/constants";
+import {salable} from "@/app/salable";
+import {PlanCheckout} from "@salable/node-sdk/dist/src/types";
 
 export type Result<T> =
   | { data: T; error: null }
   | { data: null; error: string };
 
-type CheckoutLink = {
-  checkoutUrl: string
-}
-
-export async function getCheckoutLink(session: Session, planUuid: string): Promise<Result<CheckoutLink>> {
+export async function getCheckoutLink(session: Session, planUuid: string): Promise<Result<PlanCheckout>> {
   try {
-    const params = new URLSearchParams({
+    const data = await salable.plans.getCheckoutLink(planUuid, {
       customerEmail: session.email,
       granteeId: session.uuid,
       member: session.email,
       successUrl: `${appBaseUrl}?planUuid=${planUuid}`,
       cancelUrl: `${appBaseUrl}/pricing`,
     })
-    const res = await fetch(
-      `${salableApiBaseUrl}/plans/${planUuid}/checkoutlink?${params.toString()}`,
-      {headers: {'x-api-key': env.SALABLE_API_KEY}}
-    )
-    if (res.ok) {
-      const data = await res.json() as CheckoutLink
-      return {data, error: null}
+    return {
+      data, error: null
     }
-    const error = await getErrorMessage(res, 'Plan')
-    return {data: null, error}
   } catch (e) {
     console.log(e)
     return {data: null, error: 'Unknown error'}
