@@ -6,6 +6,7 @@ import { Result } from "@/app/actions/checkout-link";
 import {PaginatedSubscriptionInvoice, Plan, PlanCurrency, Subscription} from "@salable/node-sdk/dist/src/types";
 import {salable} from "@/app/salable";
 import {SalableResponseError} from "@salable/node-sdk";
+import {salableProductUuid} from "@/app/constants";
 
 export type SubscriptionExpandedPlan = Subscription & {
   plan: Plan
@@ -29,8 +30,8 @@ export async function getAllSubscriptions(): Promise<Result<GetAllSubscriptionsE
     const data = await salable.subscriptions.getAll({
       email: session.email,
       expand: ['plan'],
-      // sort: 'desc',
-      // productUuid: salableProductUuid
+      sort: 'desc',
+      productUuid: salableProductUuid
     }) as GetAllSubscriptionsExpandedPlan
     return {
       data, error: null
