@@ -2,30 +2,16 @@ import {licenseCheck} from "@/fetch/licenses/check";
 import React, {Suspense} from "react";
 import {StringGeneratorForm} from "@/components/forms/string-generator-form";
 import {getSession} from "@/fetch/session";
-import {bytes, salableApiBaseUrl, salableBasicPlanUuid} from "@/app/constants";
-import {env} from "@/app/environment";
-import { Result } from "./actions/checkout-link";
-import { Session } from "./actions/sign-in";
-import {getErrorMessage} from "@/app/actions/get-error-message";
+import {bytes, salableBasicPlanUuid} from "@/app/constants";
 import {FetchError} from "@/components/fetch-error";
 import Link from "next/link";
 import {LockIcon} from "@/components/icons/lock-icon";
 import LoadingSpinner from "@/components/loading-spinner";
 import {getCurrentUsage} from "@/fetch/usage";
+import {getAllLicenses} from "@/fetch/licenses/get-all";
 
 export const metadata = {
   title: 'Salable Usage Demo',
-}
-
-export type GetAllLicenses = {
-  first: string;
-  last: string;
-  data: {
-    uuid: string;
-    granteeId: string;
-    planUuid: string;
-    subscriptionUuid: string;
-  }[]
 }
 
 export default async function Home({searchParams}: {
@@ -53,17 +39,19 @@ export default async function Home({searchParams}: {
 
 const StringGenerator = async ({search}: {search: Record<string, string>}) => {
   const session = await getSession();
-  const currentUsage = await getCurrentUsage({
-    planUuid: salableBasicPlanUuid
-  });
+  const currentUsage = await getCurrentUsage(salableBasicPlanUuid);
 
   if (search.planUuid && session?.uuid) {
     await new Promise<void>(async (resolve) => {
       while (true) {
         try {
-          const licenses = await getLicenses(session, search.planUuid);
+          const licenses = await getAllLicenses({
+            granteeId: session.uuid,
+            planUuid: search.planUuid,
+            status: 'ACTIVE'
+          });
           if (licenses.error) break
-          if (licenses.data?.data?.[0]?.planUuid === search.planUuid) {
+          if (licenses.data?.data.find((l) => l.planUuid === search.planUuid)) {
             resolve()
             break
           }
@@ -78,6 +66,8 @@ const StringGenerator = async ({search}: {search: Record<string, string>}) => {
   const check = session?.uuid ? await licenseCheck(session.uuid) : {
     data: null, error: null
   }
+
+  console.log(check)
 
   return (
     <>
@@ -139,37 +129,4 @@ const Loading = () => {
       </div>
     </div>
   )
-}
-
-
-async function getLicenses(session: Session, planUuid: string): Promise<Result<GetAllLicenses>> {
-  try {
-    const res = await fetch(`${salableApiBaseUrl}/licenses?granteeId=${session.uuid}&planUuid=${planUuid}&status=active`, {
-      headers: {
-        'x-api-key': env.SALABLE_API_KEY,
-        version: 'v2',
-        cache: 'no-cache',
-      },
-    })
-    if (res.ok) {
-      const data = await res.json() as GetAllLicenses
-      return {
-        data,
-        error: null
-      }
-    }
-
-    const error = await getErrorMessage(res)
-    console.log(error)
-    return {
-      data: null,
-      error: 'Failed to fetch licenses'
-    }
-  } catch (e) {
-    console.log(e)
-    return {
-      data: null,
-      error: 'Failed to fetch licenses'
-    }
-  }
 }
