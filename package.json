@@ -18,7 +18,7 @@
     "@types/pg": "^8.11.10",
     "date-fns": "^4.1.0",
     "dotenv": "^16.4.5",
-    "iron-session": "^8.0.2",
+    "iron-session": "^8.0.4",
     "next": "15.0.3",
     "pg": "^8.13.1",
     "prisma": "^5.22.0",
