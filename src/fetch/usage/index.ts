@@ -12,7 +12,7 @@ export type CurrentUsage = {
   updatedAt: string
 }
 
-export const getAllUsage = async (params?: GetUsageOptions): Promise<Result<PaginatedUsageRecords>> => {
+export const getAllUsage = async (params?: Omit<GetUsageOptions, 'granteeId'>): Promise<Result<PaginatedUsageRecords>> => {
   try {
     const session = await getIronSession<Session>(await cookies(), { password: env.SESSION_COOKIE_PASSWORD, cookieName: env.SESSION_COOKIE_NAME });
     if(!session?.uuid) {
