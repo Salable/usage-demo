@@ -38,7 +38,7 @@ export const generateString = async (formData: CreateStringRequestBody): Promise
     }
 
     const check = await licenseCheck(session.uuid)
-    if (!check.data?.capabilities.find((c) => c.capability === 'basic')) {
+    if (!check.data?.capabilities.find((c) => c.capability === 'random_string_generator')) {
       return {
         data: null,
         error: 'Unauthorised'
