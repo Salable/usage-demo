@@ -71,7 +71,7 @@ const BasicPlanPricingTableButton = async () => {
   if (check.error) return <FetchError error='Failed to create button' />
   return (
     <>
-      {check?.data?.capabilities?.find((a) => a.capability === 'basic') ? (
+      {check?.data?.capabilities?.find((a) => a.capability === 'random_string_generator') ? (
         <div className={`p-4 text-white rounded-md leading-none bg-green-700 inline-flex items-center w-full justify-center font-bold`}>
           <div className='mr-1'><TickIcon fill='#FFF' height={14} width={14}/></div>
           Already subscribed

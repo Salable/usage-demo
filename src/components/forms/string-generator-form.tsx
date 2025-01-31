@@ -50,7 +50,7 @@ export const StringGeneratorForm = (
   }
 
   const bytes: Bytes[] = ['16', '32', '64', '128']
-  const isLicensed = check?.capabilities.find((c) => c.capability === 'basic')
+  const isLicensed = check?.capabilities.find((c) => c.capability === 'random_string_generator')
 
   const Byte = ({size, capability}: {size: string; capability: boolean}) => {
     return (
